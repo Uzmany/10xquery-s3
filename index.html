@@ -251,20 +251,9 @@
     }
     @media (min-width: 900px) { .auth-panel-left { display: flex; } }
 
-    /* mesh glow — hardcoded since panel is always dark */
-    .auth-panel-left::before {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 55% 45% at 10% 10%, rgba(46,125,82,.22) 0%, transparent 60%),
-        radial-gradient(ellipse 45% 55% at 90% 88%, rgba(109,78,224,.18) 0%, transparent 60%);
-    }
-    .auth-panel-left::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size: 52px 52px;
-    }
+    /* No decorative overlays — let the product preview do the visual work */
+    .auth-panel-left::before { display: none; }
+    .auth-panel-left::after  { display: none; }
 
     .auth-brand { position: relative; z-index: 1; }
     .auth-brand-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 44px; }
@@ -277,17 +266,15 @@
     .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.4px; color: #F0F6FF; }
 
     .auth-headline {
-      font-size: 36px; font-weight: 800;
-      letter-spacing: -.7px; line-height: 1.18;
-      color: #F0F6FF; margin-bottom: 12px;
+      font-size: 32px; font-weight: 700;
+      letter-spacing: -.45px; line-height: 1.25;
+      color: #F0F6FF; margin-bottom: 14px;
     }
-    .auth-headline span {
-      background: linear-gradient(110deg, #34C875 0%, #3B82F6 55%, #8B5CF6 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+    /* No gradient on headline — just clean white */
+    .auth-headline span { color: inherit; }
     .auth-tagline {
-      font-size: 14px; color: rgba(240,246,255,.5);
-      line-height: 1.7; margin-bottom: 28px;
+      font-size: 14.5px; color: rgba(240,246,255,.46);
+      line-height: 1.68; margin-bottom: 28px;
     }
 
     /* Product preview "browser window" */
@@ -1358,22 +1345,25 @@
     <!-- Brand -->
     <div class="auth-brand">
       <div class="auth-brand-logo">
-        <div class="brand-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        <!-- Clean data-grid mark — no gradient, no decoration -->
+        <div class="brand-icon" style="background:transparent;border:1.5px solid rgba(255,255,255,.18);border-radius:8px;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="1" y="1" width="6" height="6" rx="1" fill="white" opacity=".9"/>
+            <rect x="9" y="1" width="6" height="6" rx="1" fill="white" opacity=".5"/>
+            <rect x="1" y="9" width="6" height="6" rx="1" fill="white" opacity=".5"/>
+            <rect x="9" y="9" width="6" height="6" rx="1" fill="white" opacity=".25"/>
           </svg>
         </div>
         <span class="brand-name">10xQuery</span>
-        <span style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(240,246,255,.35);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);padding:2px 8px;border-radius:20px;margin-left:4px;">Enterprise</span>
       </div>
-      
+
       <h2 class="auth-headline">
-        The enterprise survey<br>platform built for <span>scale.</span>
+        Survey 100 suppliers.<br>In one form.
       </h2>
       <p class="auth-tagline">
-        Matrix surveys, real-time analytics, collaborator access controls, and structured data exports — built for teams that collect complex data at scale.
+        Collect structured data from multiple entities in a single submission. Built for aggregators, procurement teams, and anyone who needs consistent answers at scale.
       </p>
-          </div>
+    </div>
 
     <!-- Product preview card -->
     <div class="product-preview">
@@ -1421,25 +1411,19 @@
       </div>
     </div>
 
-    <!-- Feature bullets -->
+    <!-- Feature bullets — clean, no icon boxes -->
     <div class="feature-list">
       <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(52,200,117,.12);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34C875" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-        </div>
-        <div class="feature-text"><strong>Matrix surveys with skip logic</strong> — fill multiple entities in one submission</div>
+        <span style="color:rgba(255,255,255,.2);font-size:16px;line-height:1;flex-shrink:0;">—</span>
+        <div class="feature-text"><strong>Matrix surveys with skip logic</strong> — one form for dozens of suppliers</div>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(59,130,246,.12);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-        <div class="feature-text"><strong>Private surveys with user-level access</strong> — share by 8-digit ID</div>
+        <span style="color:rgba(255,255,255,.2);font-size:16px;line-height:1;flex-shrink:0;">—</span>
+        <div class="feature-text"><strong>Private access by user ID</strong> — no email invites, no link sharing</div>
       </div>
       <div class="feature-item">
-        <div class="feature-icon" style="background:rgba(139,92,246,.12);">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div class="feature-text"><strong>Collaborators &amp; real-time analytics</strong> — team editing, CSV/Excel export</div>
+        <span style="color:rgba(255,255,255,.2);font-size:16px;line-height:1;flex-shrink:0;">—</span>
+        <div class="feature-text"><strong>Real-time results with CSV &amp; Excel export</strong> — edit responses after submission</div>
       </div>
     </div>
 
@@ -1530,10 +1514,13 @@
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-icon">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1" fill="white" opacity=".9"/>
+          <rect x="9" y="1" width="6" height="6" rx="1" fill="white" opacity=".55"/>
+          <rect x="1" y="9" width="6" height="6" rx="1" fill="white" opacity=".55"/>
+          <rect x="9" y="9" width="6" height="6" rx="1" fill="white" opacity=".28"/>
         </svg>
-        </div>
+      </div>
       <span class="logo-wordmark">10xQuery</span>
       <span class="logo-pill">Enterprise</span>
     </div>
