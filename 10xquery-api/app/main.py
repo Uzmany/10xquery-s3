@@ -63,6 +63,10 @@ class SurveyRenameRequest(BaseModel):
     visibility: Optional[str] = "public"
     allowedUsers: Optional[List[str]] = []
 
+class CollaboratorsRequest(BaseModel):
+    userId: str          # must be the owner
+    collaborators: List[str]  # full replacement list of collaborator userIds
+
 class SurveyDefinitionRequest(BaseModel):
     userId: str
     definition: dict[str, Any]
@@ -87,6 +91,16 @@ def _ensure_owner(survey_id: str, user_id: str):
     if not item:
         raise HTTPException(404, "Survey not found")
     if item.get("ownerId") != user_id:
+        raise HTTPException(403, "Forbidden")
+    return item
+
+def _ensure_editor(survey_id: str, user_id: str):
+    """Owner OR collaborator can perform editor actions."""
+    resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "META"})
+    item = resp.get("Item")
+    if not item:
+        raise HTTPException(404, "Survey not found")
+    if item.get("ownerId") != user_id and user_id not in item.get("collaborators", []):
         raise HTTPException(403, "Forbidden")
     return item
 
@@ -127,6 +141,8 @@ def create_survey(body: SurveyCreateRequest):
         "status": "draft",
         "visibility": visibility,
         "allowedUsers": allowed_users,
+        "collaborators": [],
+        "responseCount": 0,
         "GSI1PK": f"USER#{owner_id}",
         "GSI1SK": created_at,
     })
@@ -152,6 +168,8 @@ def list_surveys(userId: str):
             "visibility": i.get("visibility", "public"),
             "createdAt": i.get("createdAt"),
             "lastUpdatedAt": i.get("lastUpdatedAt"),
+            "collaborators": i.get("collaborators", []),
+            "responseCount": int(i.get("responseCount", 0)),
         })
     return results
 
@@ -200,7 +218,7 @@ def get_survey_definition(survey_id: str, userId: Optional[str] = None):
 
 @app.put("/v1/surveys/{survey_id}/definition", tags=["surveys"])
 def put_survey_definition(survey_id: str, body: SurveyDefinitionRequest):
-    _ensure_owner(survey_id, body.userId)
+    _ensure_editor(survey_id, body.userId)
     
     def to_ddb_numbers(obj):
         if isinstance(obj, float):
@@ -258,12 +276,18 @@ def submit_response(survey_id: str, req: Request, body: SurveyResponseRequest):
         "ip": ip,
         "ts": ts
     })
-    
+    # Atomically increment the response counter on the survey META
+    table.update_item(
+        Key={"PK": _pk(survey_id), "SK": "META"},
+        UpdateExpression="SET responseCount = if_not_exists(responseCount, :zero) + :inc",
+        ExpressionAttributeValues={":zero": 0, ":inc": 1},
+    )
+
     return {"ok": True, "responseId": resp_id}
 
 @app.get("/v1/surveys/{survey_id}/responses", tags=["surveys"])
 def list_responses(survey_id: str, userId: str):
-    _ensure_owner(survey_id, userId)
+    _ensure_editor(survey_id, userId)
     resp = table.query(
         KeyConditionExpression="PK = :pk AND begins_with(SK, :p)",
         ExpressionAttributeValues={":pk": _pk(survey_id), ":p": "RESP#"}
@@ -295,7 +319,7 @@ def list_responses(survey_id: str, userId: str):
 
 @app.put("/v1/surveys/{survey_id}/responses/{response_id}", tags=["surveys"])
 def update_response(survey_id: str, response_id: str, body: UpdateResponseRequest):
-    _ensure_owner(survey_id, body.userId)
+    _ensure_editor(survey_id, body.userId)
 
     resp = table.query(
         KeyConditionExpression="PK = :pk AND begins_with(SK, :p)",
@@ -320,6 +344,30 @@ def update_response(survey_id: str, response_id: str, body: UpdateResponseReques
         }
     )
     return {"ok": True}
+
+@app.put("/v1/surveys/{survey_id}/collaborators", tags=["surveys"])
+def update_collaborators(survey_id: str, body: CollaboratorsRequest):
+    _ensure_owner(survey_id, body.userId)
+    # Prevent owner from adding themselves
+    collabs = [c for c in body.collaborators if c != body.userId]
+    table.update_item(
+        Key={"PK": _pk(survey_id), "SK": "META"},
+        UpdateExpression="SET collaborators = :c",
+        ExpressionAttributeValues={":c": collabs},
+    )
+    return {"ok": True, "collaborators": collabs}
+
+@app.get("/v1/users/lookup/{user_id}", tags=["users"])
+def lookup_user(user_id: str):
+    """Public profile lookup — returns only non-sensitive fields."""
+    from .users import _get_profile_by_user_id
+    profile = _get_profile_by_user_id(user_id)
+    if not profile:
+        raise HTTPException(404, "User not found")
+    return {
+        "userId": profile["userId"],
+        "displayName": profile.get("displayName"),
+    }
 
 @app.delete("/v1/surveys/{survey_id}", tags=["surveys"])
 def delete_survey(survey_id: str, userId: str):

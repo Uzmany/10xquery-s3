@@ -1163,6 +1163,80 @@
 
     /* Edit resp modal is wider */
     #editRespModal .modal { max-width: 820px; width: 95vw; }
+
+    /* ── Settings page ── */
+    .settings-section {
+      background: var(--surface-1); border: 1px solid var(--bd-2);
+      border-radius: var(--r-lg); overflow: hidden; margin-bottom: 20px;
+    }
+    .settings-section-head {
+      padding: 14px 20px; border-bottom: 1px solid var(--bd);
+      background: var(--surface-2);
+      font-size: 11px; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; color: var(--t2);
+    }
+    .settings-section-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .settings-row { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center; }
+    .settings-label { font-size: 13px; font-weight: 500; color: var(--t2); }
+    .settings-value { font-size: 13px; color: var(--t1); }
+    .settings-value-muted { font-size: 13px; color: var(--t3); font-family: monospace; }
+
+    /* ── Analytics page ── */
+    .analytics-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+    @media (max-width: 1000px) { .analytics-stats { grid-template-columns: repeat(2,1fr); } }
+
+    .analytics-survey-table { background: var(--surface-1); border: 1px solid var(--bd-2); border-radius: var(--r-lg); overflow: hidden; }
+    .analytics-survey-table table { width: 100%; border-collapse: collapse; }
+    .analytics-survey-table th {
+      padding: 10px 16px; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--t2); background: var(--surface-2);
+      border-bottom: 1px solid var(--bd-2); text-align: left; white-space: nowrap;
+    }
+    .analytics-survey-table td { padding: 13px 16px; border-bottom: 1px solid var(--bd); font-size: 13px; }
+    .analytics-survey-table tr:last-child td { border-bottom: none; }
+    .analytics-survey-table tbody tr { cursor: pointer; transition: background var(--t-fast); }
+    .analytics-survey-table tbody tr:hover td { background: var(--surface-2); }
+
+    .response-bar-wrap { width: 100px; height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
+    .response-bar { height: 100%; background: var(--blue); border-radius: 3px; transition: width .4s var(--ease); }
+
+    /* Per-survey analytics detail */
+    .chart-card {
+      background: var(--surface-1); border: 1px solid var(--bd-2);
+      border-radius: var(--r-lg); padding: 20px; margin-bottom: 20px;
+    }
+    .chart-card-title { font-size: 13px; font-weight: 600; margin-bottom: 16px; color: var(--t1); }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* ── Collaborators panel ── */
+    .collab-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--bd);
+    }
+    .collab-item:last-child { border-bottom: none; }
+    .collab-avatar {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: var(--violet-dim); border: 1px solid var(--bd-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--violet);
+    }
+    .collab-info { flex: 1; min-width: 0; }
+    .collab-name { font-size: 12.5px; font-weight: 500; color: var(--t1); }
+    .collab-id { font-size: 10.5px; color: var(--t3); font-family: monospace; }
+    .collab-owner-tag {
+      font-size: 9.5px; font-weight: 600; color: var(--blue);
+      background: var(--blue-dim); border: 1px solid var(--bd-2);
+      padding: 2px 6px; border-radius: 20px; white-space: nowrap;
+    }
+    .collab-add-row { display: flex; gap: 7px; margin-top: 10px; }
+    .collab-add-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 7px 10px; border-radius: var(--r);
+      font-size: 12.5px; outline: none; font-family: monospace;
+      letter-spacing: .06em; transition: border-color var(--t-fast) var(--ease);
+    }
+    .collab-add-input:focus { border-color: var(--blue); }
+    .collab-add-input::placeholder { letter-spacing: 0; font-family: inherit; color: var(--t3); }
   </style>
 </head>
 <body>
@@ -1325,12 +1399,11 @@
         <span class="nav-count" id="navCount">0</span>
       </div>
 
-      <div class="nav-link coming-soon">
+      <div class="nav-link" id="nav-analytics" onclick="showAnalytics()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
         </svg>
         Analytics
-        <span class="nav-soon">Soon</span>
       </div>
 
       <div class="nav-link coming-soon">
@@ -1352,13 +1425,12 @@
         <span class="nav-soon">Soon</span>
       </div>
 
-      <div class="nav-link coming-soon">
+      <div class="nav-link" id="nav-settings" onclick="showSettings()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
         </svg>
         Settings
-        <span class="nav-soon">Soon</span>
       </div>
     </div>
 
@@ -1616,6 +1688,20 @@
       </div>
 
           <div class="e-panel">
+            <div class="e-panel-head">Collaborators</div>
+            <div class="e-panel-body" style="gap:10px;">
+              <p style="font-size:11.5px;color:var(--t2);line-height:1.55;">
+                Collaborators can view and edit this survey's questions and responses. Only the owner can manage collaborators.
+              </p>
+              <div id="collabList"></div>
+              <div class="collab-add-row" id="collabAddRow">
+                <input type="text" id="collabInput" class="collab-add-input" placeholder="8-digit user ID" maxlength="8" inputmode="numeric" pattern="[0-9]{8}">
+                <button class="btn btn-primary btn-sm" onclick="addCollaborator()">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="e-panel">
             <div class="e-panel-head">Question Types</div>
             <div class="e-panel-body">
               <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
@@ -1688,6 +1774,151 @@
         </table>
       </div>
     </div><!-- /page-results -->
+
+
+    <!-- ── PAGE: ANALYTICS OVERVIEW ── -->
+    <div id="page-analytics" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Analytics</h1>
+          <p>Response rates, trends, and insights across all your surveys.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;align-self:flex-start;margin-top:4px;">
+          <select id="analyticsRange" class="field-input" style="width:auto;padding:7px 12px;font-size:13px;" onchange="renderAnalyticsOverview()">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="analytics-stats" id="analytics-stats">
+        <!-- injected -->
+      </div>
+
+      <div class="section-bar" style="margin-bottom:14px;">
+        <span class="section-bar-title">Surveys</span>
+        <span class="section-bar-count" id="analyticsSurveyCount">—</span>
+      </div>
+      <div class="analytics-survey-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Survey</th>
+              <th>Visibility</th>
+              <th>Total Responses</th>
+              <th>Response volume</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody id="analytics-table-body"></tbody>
+        </table>
+      </div>
+    </div><!-- /page-analytics -->
+
+
+    <!-- ── PAGE: SURVEY ANALYTICS DETAIL ── -->
+    <div id="page-survey-analytics" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="page-header-text">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <button class="btn btn-ghost btn-sm" onclick="closeSurveyAnalytics()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back
+            </button>
+            <span class="topbar-sep">/</span>
+            <h1 id="surveyAnalyticsTitle" style="font-size:18px;margin-bottom:0;">Analytics</h1>
+          </div>
+          <p style="font-size:13px;color:var(--t2);" id="surveyAnalyticsSubtitle">Loading…</p>
+        </div>
+      </div>
+
+      <div class="analytics-stats" id="survey-analytics-stats"></div>
+
+      <div class="chart-card">
+        <div class="chart-card-title">Responses over time</div>
+        <div class="chart-wrap">
+          <canvas id="surveyChart"></canvas>
+        </div>
+      </div>
+
+      <div class="section-bar" style="margin-bottom:14px;">
+        <span class="section-bar-title">Recent Responses</span>
+        <span class="section-bar-count" id="surveyAnalyticsRespCount">—</span>
+      </div>
+      <div class="results-wrap" id="surveyAnalyticsTable">
+        <table class="results-table">
+          <thead><tr id="survey-analytics-thead"></tr></thead>
+          <tbody id="survey-analytics-tbody"></tbody>
+        </table>
+      </div>
+    </div><!-- /page-survey-analytics -->
+
+
+    <!-- ── PAGE: SETTINGS ── -->
+    <div id="page-settings" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Settings</h1>
+          <p>Manage your profile, security, and workspace preferences.</p>
+        </div>
+      </div>
+
+      <div style="max-width:600px;">
+        <!-- Profile -->
+        <div class="settings-section">
+          <div class="settings-section-head">Profile</div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <span class="settings-label">Display Name</span>
+              <input type="text" id="settingsName" class="field-input" placeholder="Your name">
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Email</span>
+              <span class="settings-value" id="settingsEmail">—</span>
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">User ID</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="settings-value-muted" id="settingsUserId">—</span>
+                <button class="btn btn-ghost btn-sm" onclick="copyToClipboard(currentUser?.userId||'')">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;padding-top:4px;">
+              <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security -->
+        <div class="settings-section">
+          <div class="settings-section-head">Security</div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <span class="settings-label">Current Password</span>
+              <input type="password" id="settingsCurrentPw" class="field-input" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">New Password</span>
+              <input type="password" id="settingsNewPw" class="field-input" placeholder="Min. 8 characters" autocomplete="new-password">
+            </div>
+            <div class="settings-row">
+              <span class="settings-label">Confirm</span>
+              <input type="password" id="settingsConfirmPw" class="field-input" placeholder="Repeat new password" autocomplete="new-password">
+            </div>
+            <div id="settingsPwError" style="display:none;padding:9px 12px;background:var(--red-dim);border:1px solid var(--bd-2);border-radius:var(--r);font-size:12.5px;color:var(--red);"></div>
+            <div style="display:flex;justify-content:flex-end;padding-top:4px;">
+              <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-settings -->
 
   </div><!-- /main-wrap -->
 </div><!-- /app -->
@@ -1856,10 +2087,12 @@
   }
 
   function setPage(id) {
-    ['surveys','editor','results'].forEach(p => {
+    ['surveys','editor','results','analytics','survey-analytics','settings'].forEach(p => {
       const el = document.getElementById('page-' + p);
       if (el) el.style.display = p === id ? '' : 'none';
     });
+    // Reset nav active to surveys unless caller overrides
+    if (['surveys','editor','results'].includes(id)) setNavActive('surveys');
     // topbar
     const title = { surveys:'Surveys', editor:'Survey Editor', results:'Results' }[id] || '';
     document.getElementById('topbarTitle').textContent = title;
@@ -1908,6 +2141,7 @@
         if (!res.ok) throw new Error(data.detail || 'Authentication failed');
         
         currentUser = data.user;
+      window._accessToken = data.accessToken || '';
       mountApp();
       } catch (err) {
       errBox.textContent = err.message;
@@ -2127,11 +2361,12 @@
       if (cb) cb.checked = editorAllowCustomRows;
       renderRowLabels();
       if (!editorQs.length) editorQs = [{ id: 'q1', type: 'text', title: 'Your first question', slots: 1 }];
-        renderQuestions();
+      renderQuestions();
+      loadCollaborators(id);
     } catch {
       list.innerHTML = `<div style="color:var(--red);text-align:center;padding:40px;">Failed to load questions.</div>`;
-      }
     }
+  }
 
     function closeEditor() {
     currentSrvId = null; editorQs = [];
@@ -2520,6 +2755,345 @@
       document.getElementById('results-tbody').innerHTML =
         `<tr><td colspan="100" style="text-align:center;padding:40px;color:var(--red);">Failed to load results.</td></tr>`;
     }
+  }
+
+  /* ─────────────────────────────────────────────────
+     SETTINGS
+  ───────────────────────────────────────────────── */
+  function showSettings() {
+    setPage('settings');
+    setNavActive('settings');
+    // Populate from currentUser
+    if (currentUser) {
+      document.getElementById('settingsName').value   = currentUser.displayName || '';
+      document.getElementById('settingsEmail').textContent = currentUser.email || '—';
+      document.getElementById('settingsUserId').textContent = currentUser.userId || '—';
+    }
+  }
+
+  async function saveProfile() {
+    const name = document.getElementById('settingsName').value.trim();
+    try {
+      const res = await fetch(`${API}/v1/users/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window._accessToken||''}` },
+        credentials: 'include',
+        body: JSON.stringify({ displayName: name }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      currentUser.displayName = name;
+      document.getElementById('userName').textContent = name || currentUser.email;
+      document.getElementById('userAvatar').textContent = (name||currentUser.email||'?')[0].toUpperCase();
+      showToast('Profile saved');
+    } catch { showToast('Failed to save profile', 'err'); }
+  }
+
+  async function changePassword() {
+    const cur     = document.getElementById('settingsCurrentPw').value;
+    const nw      = document.getElementById('settingsNewPw').value;
+    const confirm = document.getElementById('settingsConfirmPw').value;
+    const errBox  = document.getElementById('settingsPwError');
+    errBox.style.display = 'none';
+    if (!cur || !nw) { errBox.textContent = 'Fill in all password fields.'; errBox.style.display = ''; return; }
+    if (nw !== confirm) { errBox.textContent = 'New passwords do not match.'; errBox.style.display = ''; return; }
+    if (nw.length < 8) { errBox.textContent = 'New password must be at least 8 characters.'; errBox.style.display = ''; return; }
+    try {
+      const res = await fetch(`${API}/v1/users/me/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window._accessToken||''}` },
+        credentials: 'include',
+        body: JSON.stringify({ oldPassword: cur, newPassword: nw }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+      document.getElementById('settingsCurrentPw').value = '';
+      document.getElementById('settingsNewPw').value     = '';
+      document.getElementById('settingsConfirmPw').value = '';
+      showToast('Password updated');
+    } catch (e) { errBox.textContent = e.message; errBox.style.display = ''; }
+  }
+
+  /* ─────────────────────────────────────────────────
+     ANALYTICS
+  ───────────────────────────────────────────────── */
+  let analyticsResponses = null; // cache for current survey
+  let chartInstance = null;
+
+  function showAnalytics() {
+    setPage('analytics');
+    setNavActive('analytics');
+    renderAnalyticsOverview();
+  }
+
+  function renderAnalyticsOverview() {
+    if (!allSurveys.length) { loadSurveys().then(renderAnalyticsOverview); return; }
+    const days  = parseInt(document.getElementById('analyticsRange')?.value || '30');
+    const since = Date.now() - days * 864e5;
+
+    const totalSurveys    = allSurveys.length;
+    const totalResponses  = allSurveys.reduce((s, sv) => s + (sv.responseCount || 0), 0);
+    const activeSurveys   = allSurveys.filter(sv => (sv.responseCount||0) > 0).length;
+    const avgResponses    = totalSurveys ? (totalResponses / totalSurveys).toFixed(1) : '0';
+    const maxCount        = Math.max(...allSurveys.map(s => s.responseCount || 0), 1);
+
+    document.getElementById('analytics-stats').innerHTML = `
+      ${statCard('Total Surveys',    totalSurveys,   'in your workspace',     'blue',  '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>')}
+      ${statCard('Total Responses',  totalResponses, 'across all surveys',    'green', '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>')}
+      ${statCard('Active Surveys',   activeSurveys,  'with ≥ 1 response',     'violet','<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>')}
+      ${statCard('Avg per Survey',   avgResponses,   'responses / survey',    'amber', '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>')}
+    `;
+
+    document.getElementById('analyticsSurveyCount').textContent = totalSurveys;
+
+    const sorted = [...allSurveys].sort((a,b) => (b.responseCount||0) - (a.responseCount||0));
+    document.getElementById('analytics-table-body').innerHTML = sorted.map(s => {
+      const count = s.responseCount || 0;
+      const pct   = Math.round((count / maxCount) * 100);
+      const date  = s.lastUpdatedAt
+        ? new Date(s.lastUpdatedAt).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})
+        : '—';
+      const vis   = s.visibility === 'private'
+        ? `<span class="badge badge-red">Private</span>`
+        : `<span class="badge badge-blue">Public</span>`;
+      return `<tr onclick="openSurveyAnalytics('${s.surveyId}')">
+        <td style="font-weight:500;">${esc(s.title)}</td>
+        <td>${vis}</td>
+        <td><span style="font-size:16px;font-weight:700;color:var(--t1);">${count}</span></td>
+        <td><div class="response-bar-wrap"><div class="response-bar" style="width:${pct}%;"></div></div></td>
+        <td style="color:var(--t2);">${date}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--t2);">No surveys yet.</td></tr>`;
+  }
+
+  function statCard(label, value, sub, color, iconPaths) {
+    return `<div class="stat-card ${color}">
+      <div class="stat-row-top">
+        <span class="stat-label-text">${label}</span>
+        <div class="stat-icon" style="background:var(--${color==='amber'?'amber':'blue'==='amber'?'amber':color}-dim);color:var(--${color==='amber'?'amber':color});">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconPaths}</svg>
+        </div>
+      </div>
+      <div class="stat-value">${value}</div>
+      <div class="stat-sub">${sub}</div>
+    </div>`;
+  }
+
+  async function openSurveyAnalytics(surveyId) {
+    const survey = allSurveys.find(s => s.surveyId === surveyId);
+    document.getElementById('surveyAnalyticsTitle').textContent = survey?.title || 'Survey';
+    document.getElementById('surveyAnalyticsSubtitle').textContent = 'Loading responses…';
+    setPage('survey-analytics');
+    setNavActive('analytics');
+
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    document.getElementById('survey-analytics-stats').innerHTML  = '';
+    document.getElementById('survey-analytics-tbody').innerHTML  = `<tr><td colspan="100" style="text-align:center;padding:40px;color:var(--t2);">Loading…</td></tr>`;
+
+    try {
+      const [defRes, rspRes] = await Promise.all([
+        fetch(`${API}/v1/surveys/${surveyId}/definition?userId=${currentUser.userId}`),
+        fetch(`${API}/v1/surveys/${surveyId}/responses?userId=${currentUser.userId}`),
+      ]);
+      const defData   = await defRes.json();
+      const responses = await rspRes.json();
+      const questions = defData.questions || [];
+      const total     = responses.length;
+      const recent    = responses.filter(r => Date.now() - new Date(r.ts).getTime() < 7*864e5).length;
+      const today     = responses.filter(r => new Date(r.ts).toDateString() === new Date().toDateString()).length;
+
+      document.getElementById('surveyAnalyticsSubtitle').textContent = `${total} response${total!==1?'s':''} total`;
+      document.getElementById('surveyAnalyticsRespCount').textContent = total;
+
+      document.getElementById('survey-analytics-stats').innerHTML = `
+        ${statCard('Total Responses', total,  'all time',     'blue',  '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>')}
+        ${statCard('Last 7 Days',     recent, 'recent activity', 'green', '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>')}
+        ${statCard('Today',           today,  'responses today', 'violet','<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>')}
+        ${statCard('Questions',       questions.length, 'in this survey', 'amber', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>')}
+      `;
+
+      // Chart: responses per day (last 30 days)
+      await loadChartJs();
+      const dayMap = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        dayMap[d.toISOString().slice(0,10)] = 0;
+      }
+      responses.forEach(r => {
+        const key = r.ts?.slice(0,10);
+        if (key && key in dayMap) dayMap[key]++;
+      });
+      const labels = Object.keys(dayMap);
+      const data   = Object.values(dayMap);
+      const ctx    = document.getElementById('surveyChart').getContext('2d');
+      const isDark = document.documentElement.classList.contains('dark');
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.map(d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})),
+          datasets: [{
+            label: 'Responses',
+            data,
+            borderColor: '#2E7D52',
+            backgroundColor: 'rgba(46,125,82,.08)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#2E7D52',
+            tension: .35,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => i[0].label } } },
+          scales: {
+            x: { grid: { color: isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)' }, ticks: { color: isDark?'#475569':'#7D9884', maxTicksLimit: 8 } },
+            y: { beginAtZero: true, grid: { color: isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)' }, ticks: { color: isDark?'#475569':'#7D9884', stepSize: 1 } }
+          }
+        }
+      });
+
+      // Recent responses table
+      document.getElementById('survey-analytics-thead').innerHTML =
+        `<th>Timestamp</th><th>Respondent</th>${questions.map(q=>`<th>${esc(q.title)}</th>`).join('')}`;
+      document.getElementById('survey-analytics-tbody').innerHTML =
+        responses.slice().reverse().slice(0,20).map(r => {
+          const d = new Date(r.ts);
+          const t = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+          const cells = questions.map(q => {
+            const ans = r.answers?.[q.id];
+            const rowLabels = defData.rowLabels || [];
+            const txt = ans === undefined ? '—'
+              : typeof ans === 'object' && !Array.isArray(ans)
+                ? rowLabels.map(k => `${k}: ${fmtVal(ans[k])}`).join(' | ')
+                : fmtVal(ans);
+            return `<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(txt)}">${esc(txt)}</td>`;
+          }).join('');
+          return `<tr><td style="color:var(--t2);white-space:nowrap;">${t}</td><td style="font-family:monospace;color:var(--blue);">${esc(r.responderId||'Anonymous')}</td>${cells}</tr>`;
+        }).join('') || `<tr><td colspan="100" style="text-align:center;padding:40px;color:var(--t2);">No responses yet.</td></tr>`;
+
+    } catch (e) {
+      document.getElementById('surveyAnalyticsSubtitle').textContent = 'Failed to load';
+    }
+  }
+
+  function fmtVal(v) {
+    if (v === undefined || v === null) return '—';
+    if (Array.isArray(v)) return v.join(', ');
+    return String(v);
+  }
+
+  function closeSurveyAnalytics() { showAnalytics(); }
+
+  async function loadChartJs() {
+    if (window.Chart) return;
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ─────────────────────────────────────────────────
+     COLLABORATORS
+  ───────────────────────────────────────────────── */
+  let currentCollaborators = [];
+
+  async function loadCollaborators(surveyId) {
+    const survey = allSurveys.find(s => s.surveyId === surveyId);
+    currentCollaborators = survey?.collaborators || [];
+    await renderCollaborators();
+    // Hide add-row if current user is not the owner
+    const addRow = document.getElementById('collabAddRow');
+    if (addRow) addRow.style.display = survey?.ownerId === currentUser?.userId ? '' : 'none';
+  }
+
+  async function renderCollaborators() {
+    const survey = allSurveys.find(s => s.surveyId === currentSrvId);
+    const owner  = survey?.ownerId || '';
+    const list   = document.getElementById('collabList');
+    if (!list) return;
+
+    // Fetch display names for owner + collaborators
+    const ids = [owner, ...currentCollaborators].filter(Boolean);
+    const names = {};
+    await Promise.all(ids.map(async id => {
+      try {
+        const r = await fetch(`${API}/v1/users/lookup/${id}`);
+        if (r.ok) { const d = await r.json(); names[id] = d.displayName || id; }
+        else names[id] = id;
+      } catch { names[id] = id; }
+    }));
+
+    const items = [
+      { id: owner, role: 'owner', name: names[owner] || owner },
+      ...currentCollaborators.map(id => ({ id, role: 'collab', name: names[id] || id }))
+    ];
+
+    list.innerHTML = items.map(({ id, role, name }) => `
+      <div class="collab-item">
+        <div class="collab-avatar">${(name||'?')[0].toUpperCase()}</div>
+        <div class="collab-info">
+          <div class="collab-name">${esc(name)}</div>
+          <div class="collab-id">${id}</div>
+        </div>
+        ${role === 'owner'
+          ? `<span class="collab-owner-tag">Owner</span>`
+          : owner === currentUser?.userId
+            ? `<button class="icon-btn" onclick="removeCollaborator('${id}')" title="Remove collaborator" style="color:var(--red);border-color:transparent;">
+                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+               </button>`
+            : ''}
+      </div>`).join('');
+  }
+
+  async function addCollaborator() {
+    const input = document.getElementById('collabInput');
+    const id    = (input?.value || '').trim();
+    if (!id || !/^\d{8}$/.test(id)) { showToast('Enter a valid 8-digit user ID', 'err'); return; }
+    if (id === currentUser?.userId) { showToast("You can't add yourself", 'err'); return; }
+    if (currentCollaborators.includes(id)) { showToast('Already a collaborator'); return; }
+
+    // Verify user exists
+    try {
+      const check = await fetch(`${API}/v1/users/lookup/${id}`);
+      if (!check.ok) { showToast('User ID not found', 'err'); return; }
+    } catch { showToast('Could not verify user ID', 'err'); return; }
+
+    const updated = [...currentCollaborators, id];
+    await _saveCollaborators(updated);
+    if (input) input.value = '';
+  }
+
+  async function removeCollaborator(id) {
+    const updated = currentCollaborators.filter(c => c !== id);
+    await _saveCollaborators(updated);
+  }
+
+  async function _saveCollaborators(list) {
+    try {
+      const res = await fetch(`${API}/v1/surveys/${currentSrvId}/collaborators`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId: currentUser.userId, collaborators: list }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      currentCollaborators = list;
+      // Update allSurveys cache
+      const sv = allSurveys.find(s => s.surveyId === currentSrvId);
+      if (sv) sv.collaborators = list;
+      await renderCollaborators();
+      showToast('Collaborators updated');
+    } catch { showToast('Failed to update collaborators', 'err'); }
+  }
+
+  /* ─────────────────────────────────────────────────
+     NAV HELPER
+  ───────────────────────────────────────────────── */
+  function setNavActive(page) {
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('nav-' + page);
+    if (el) el.classList.add('active');
   }
 
   function closeResults() {
