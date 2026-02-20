@@ -2,10 +2,9 @@ import os
 import time
 import json
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import List, Optional, Any
 from decimal import Decimal
-import jwt as _jwt
 
 import boto3
 import httpx
@@ -388,114 +387,6 @@ def lookup_user(user_id: str):
         "displayName": profile.get("displayName"),
     }
 
-@app.get("/v1/surveys/{survey_id}/row-tokens", tags=["surveys"])
-def get_row_tokens(survey_id: str, userId: str):
-    """
-    Generate signed 90-day JWT links for every row label in a matrix survey.
-    Each link lets that specific entity self-report into their column.
-    Owner / collaborator only.
-    """
-    _ensure_editor(survey_id, userId)
-
-    # Load definition to retrieve rowLabels
-    def_item = table.get_item(Key={"PK": _pk(survey_id), "SK": "DEFINITION"}).get("Item")
-    row_labels: list = []
-    if def_item:
-        row_labels = def_item.get("json", {}).get("rowLabels", [])
-
-    if not row_labels:
-        return {"rows": []}
-
-    # Load all responses once to build completion map
-    resp_items = []
-    kwargs = {
-        "KeyConditionExpression": "PK = :pk AND begins_with(SK, :p)",
-        "ExpressionAttributeValues": {":pk": _pk(survey_id), ":p": "RESP#"},
-    }
-    while True:
-        page = table.query(**kwargs)
-        resp_items.extend(page.get("Items", []))
-        last = page.get("LastEvaluatedKey")
-        if not last:
-            break
-        kwargs["ExclusiveStartKey"] = last
-
-    completed: dict = {}
-    latest_ts: dict = {}
-    for item in resp_items:
-        for rk in item.get("rowKeys", []):
-            completed[rk] = completed.get(rk, 0) + 1
-            ts = item.get("ts", "")
-            if rk not in latest_ts or ts > latest_ts[rk]:
-                latest_ts[rk] = ts
-
-    now = datetime.now(timezone.utc)
-    exp = now + timedelta(days=90)
-
-    rows = []
-    for row_key in row_labels:
-        payload = {
-            "sub": row_key,
-            "sid": survey_id,
-            "typ": "row",
-            "iat": int(now.timestamp()),
-            "exp": int(exp.timestamp()),
-        }
-        token = _jwt.encode(payload, users.JWT_SECRET, algorithm=users.JWT_ALGORITHM)
-        rows.append({
-            "rowKey":       row_key,
-            "token":        token,
-            "url":          f"https://10xquery.com/survey.html?rowToken={token}",
-            "responseCount": completed.get(row_key, 0),
-            "lastResponse": latest_ts.get(row_key),
-        })
-
-    total = sum(1 for rl in row_labels if completed.get(rl, 0) > 0)
-    return {"rows": rows, "totalRows": len(row_labels), "completedRows": total}
-
-
-@app.get("/v1/row-survey", tags=["surveys"])
-def get_row_survey_context(rowToken: str):
-    """
-    Decode a row token and return the full survey context.
-    This is the bootstrap call for the self-report form — no login required.
-    The signed token implicitly grants access even to private surveys,
-    because the owner chose to invite this specific entity.
-    """
-    try:
-        payload = _jwt.decode(
-            rowToken,
-            users.JWT_SECRET,
-            algorithms=[users.JWT_ALGORITHM],
-            options={"verify_aud": False, "verify_iss": False},
-        )
-    except _jwt.ExpiredSignatureError:
-        raise HTTPException(401, "This invite link has expired. Ask the survey owner to regenerate it.")
-    except Exception:
-        raise HTTPException(401, "Invalid invite link.")
-
-    if payload.get("typ") != "row":
-        raise HTTPException(400, "Token is not a row-invite type.")
-
-    survey_id = payload.get("sid")
-    row_key   = payload.get("sub")
-    if not survey_id or not row_key:
-        raise HTTPException(400, "Incomplete token payload.")
-
-    meta = table.get_item(Key={"PK": _pk(survey_id), "SK": "META"}).get("Item")
-    if not meta:
-        raise HTTPException(404, "Survey not found.")
-
-    def_item  = table.get_item(Key={"PK": _pk(survey_id), "SK": "DEFINITION"}).get("Item")
-    def_json  = jsonable_encoder(def_item.get("json")) if def_item else {}
-
-    return {
-        "surveyId":    survey_id,
-        "rowKey":      row_key,
-        "title":       meta.get("title"),
-        "description": meta.get("description"),
-        "definition":  def_json,
-    }
 
 
 @app.delete("/v1/surveys/{survey_id}", tags=["surveys"])
