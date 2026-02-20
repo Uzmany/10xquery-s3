@@ -53,11 +53,15 @@ class SurveyCreateRequest(BaseModel):
     title: str
     description: Optional[str] = None
     userId: str
+    visibility: Optional[str] = "public"
+    allowedUsers: Optional[List[str]] = []
 
 class SurveyRenameRequest(BaseModel):
     title: str
     description: Optional[str] = None
     userId: str
+    visibility: Optional[str] = "public"
+    allowedUsers: Optional[List[str]] = []
 
 class SurveyDefinitionRequest(BaseModel):
     userId: str
@@ -80,6 +84,22 @@ def _ensure_owner(survey_id: str, user_id: str):
         raise HTTPException(403, "Forbidden")
     return item
 
+def _check_survey_access(survey_id: str, user_id: Optional[str] = None):
+    resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "META"})
+    item = resp.get("Item")
+    if not item:
+        raise HTTPException(404, "Survey not found")
+        
+    visibility = item.get("visibility", "public")
+    allowed_users = item.get("allowedUsers", [])
+    owner_id = item.get("ownerId")
+    
+    if visibility == "private":
+        if not user_id or (user_id != owner_id and user_id not in allowed_users):
+            raise HTTPException(403, "This survey is private. You do not have access.")
+            
+    return item
+
 @app.post("/v1/surveys", tags=["surveys"])
 def create_survey(body: SurveyCreateRequest):
     survey_id = str(uuid.uuid4())
@@ -87,6 +107,8 @@ def create_survey(body: SurveyCreateRequest):
     title = (body.title or "Untitled Survey").strip()
     desc = body.description or ""
     owner_id = body.userId
+    visibility = body.visibility or "public"
+    allowed_users = body.allowedUsers or []
 
     table.put_item(Item={
         "PK": _pk(survey_id),
@@ -97,10 +119,12 @@ def create_survey(body: SurveyCreateRequest):
         "lastUpdatedAt": created_at,
         "ownerId": owner_id,
         "status": "draft",
+        "visibility": visibility,
+        "allowedUsers": allowed_users,
         "GSI1PK": f"USER#{owner_id}",
         "GSI1SK": created_at,
     })
-    return {"surveyId": survey_id, "title": title, "createdAt": created_at, "ownerId": owner_id}
+    return {"surveyId": survey_id, "title": title, "createdAt": created_at, "ownerId": owner_id, "visibility": visibility}
 
 @app.get("/v1/surveys", tags=["surveys"])
 def list_surveys(userId: str):
@@ -119,6 +143,7 @@ def list_surveys(userId: str):
             "title": i.get("title"),
             "description": i.get("description"),
             "status": i.get("status"),
+            "visibility": i.get("visibility", "public"),
             "createdAt": i.get("createdAt"),
             "lastUpdatedAt": i.get("lastUpdatedAt"),
         })
@@ -127,16 +152,15 @@ def list_surveys(userId: str):
 @app.get("/v1/surveys/{survey_id}", tags=["surveys"])
 def get_survey(survey_id: str, userId: Optional[str] = None):
     # If userId is passed, verify ownership, else just return public info (for taking survey)
-    resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "META"})
-    item = resp.get("Item")
-    if not item:
-        raise HTTPException(404, "Survey not found")
+    item = _check_survey_access(survey_id, userId)
         
     return {
         "surveyId": survey_id,
         "title": item.get("title"),
         "description": item.get("description"),
         "status": item.get("status"),
+        "visibility": item.get("visibility", "public"),
+        "allowedUsers": item.get("allowedUsers", []),
         "createdAt": item.get("createdAt")
     }
 
@@ -145,15 +169,23 @@ def update_survey_meta(survey_id: str, req: SurveyRenameRequest):
     _ensure_owner(survey_id, req.userId)
     table.update_item(
         Key={"PK": _pk(survey_id), "SK": "META"},
-        UpdateExpression="SET #t = :t, #d = :d, #lu = :lu, #gsi = :lu",
+        UpdateExpression="SET #t = :t, #d = :d, #lu = :lu, #gsi = :lu, visibility = :v, allowedUsers = :au",
         ExpressionAttributeNames={"#t": "title", "#d": "description", "#lu": "lastUpdatedAt", "#gsi": "GSI1SK"},
-        ExpressionAttributeValues={":t": req.title, ":d": req.description or "", ":lu": datetime.now(timezone.utc).isoformat()},
+        ExpressionAttributeValues={
+            ":t": req.title, 
+            ":d": req.description or "", 
+            ":lu": datetime.now(timezone.utc).isoformat(),
+            ":v": req.visibility or "public",
+            ":au": req.allowedUsers or []
+        },
     )
     return {"ok": True}
 
 @app.get("/v1/surveys/{survey_id}/definition", tags=["surveys"])
-def get_survey_definition(survey_id: str):
-    # Public endpoint to get questions
+def get_survey_definition(survey_id: str, userId: Optional[str] = None):
+    # Check access before returning definition
+    _check_survey_access(survey_id, userId)
+    
     resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "DEFINITION"})
     item = resp.get("Item")
     if not item:
@@ -193,10 +225,8 @@ def put_survey_definition(survey_id: str, body: SurveyDefinitionRequest):
 
 @app.post("/v1/surveys/{survey_id}/responses", tags=["surveys"])
 def submit_response(survey_id: str, req: Request, body: SurveyResponseRequest):
-    # Verify survey exists
-    resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "META"})
-    if not resp.get("Item"):
-        raise HTTPException(404, "Survey not found")
+    # Verify access
+    _check_survey_access(survey_id, body.responderId)
 
     resp_id = str(uuid.uuid4())
     ts = datetime.now(timezone.utc).isoformat()

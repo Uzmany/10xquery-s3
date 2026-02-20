@@ -28,17 +28,24 @@
 </head>
 <body>
   <div class="container" id="survey-container">
-    <h1 id="title">Loading...</h1>
-    <p id="desc"></p>
-    
-    <div id="questions">
-      <!-- Default single question for MVP -->
-      <label style="display:block;margin-bottom:8px;font-weight:500;">Your thoughts:</label>
-      <textarea id="answer"></textarea>
-      <button class="btn" onclick="submit()">Submit</button>
+    <div id="auth" style="display:none; margin-bottom: 24px;">
+      <p style="color:#e03131;">This is a private survey. Please enter your User ID to access it.</p>
+      <input type="text" id="viewerId" placeholder="Your 8-digit User ID" style="width:100%; padding:10px; margin-bottom:12px; border:1px solid #eaeaea; border-radius:6px;">
+      <button class="btn" onclick="load(document.getElementById('viewerId').value)">Access Survey</button>
     </div>
-    <div id="thanks" style="display:none; text-align:center;">
-      <h3>Thanks for your response!</h3>
+    
+    <div id="content" style="display:block;">
+      <h1 id="title">Loading...</h1>
+      <p id="desc"></p>
+      
+      <div id="questions" style="display:none;">
+        <label style="display:block;margin-bottom:8px;font-weight:500;">Your thoughts:</label>
+        <textarea id="answer"></textarea>
+        <button class="btn" onclick="submit()">Submit</button>
+      </div>
+      <div id="thanks" style="display:none; text-align:center;">
+        <h3>Thanks for your response!</h3>
+      </div>
     </div>
   </div>
 
@@ -46,19 +53,40 @@
     const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
     const params = new URLSearchParams(window.location.search);
     const surveyId = params.get('id');
+    let currentUserId = null;
 
-    async function load() {
+    async function load(userId = null) {
       if (!surveyId) {
         document.getElementById('title').textContent = "Survey not found";
         return;
       }
-      const res = await fetch(`${API}/v1/surveys/${surveyId}`);
+      
+      let url = `${API}/v1/surveys/${surveyId}`;
+      if (userId) {
+        url += `?userId=${userId}`;
+      }
+      
+      const res = await fetch(url);
+      
+      if (res.status === 403) {
+        document.getElementById('auth').style.display = 'block';
+        document.getElementById('content').style.display = 'none';
+        return;
+      }
+      
       if (res.ok) {
         const data = await res.json();
+        currentUserId = userId; // Store for submission
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
         document.getElementById('title').textContent = data.title;
         document.getElementById('desc').textContent = data.description || '';
+        document.getElementById('questions').style.display = 'block';
       } else {
-        document.getElementById('title').textContent = "Survey not found";
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('title').textContent = "Survey not found or access denied.";
+        document.getElementById('desc').textContent = '';
+        document.getElementById('questions').style.display = 'none';
       }
     }
 
@@ -67,11 +95,13 @@
       const res = await fetch(`${API}/v1/surveys/${surveyId}/responses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: { q1: answer } })
+        body: JSON.stringify({ answers: { q1: answer }, responderId: currentUserId })
       });
       if (res.ok) {
         document.getElementById('questions').style.display = 'none';
         document.getElementById('thanks').style.display = 'block';
+      } else {
+        alert("Failed to submit response.");
       }
     }
 

@@ -4,6 +4,7 @@ import time
 import base64
 import secrets
 import hashlib
+import random
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any, Dict
 
@@ -318,7 +319,11 @@ def create_user(req: SignUpRequest, request: Request, response: Response):
     if existing:
         raise HTTPException(409, "Email already in use")
 
-    user_id = str(uuid.uuid4())
+    # Generate a unique 8-digit user number
+    user_id = str(random.randint(10000000, 99999999))
+    while _get_profile_by_user_id(user_id):
+        user_id = str(random.randint(10000000, 99999999))
+
     now = _now_iso()
     display_name = req.displayName or req.email.split("@")[0]
     try:
@@ -539,7 +544,10 @@ def google_verify(req: GoogleVerifyRequest, request: Request, response: Response
             profile = _get_profile_by_user_id(profile["userId"]) or {}
         else:
             # Create new profile
-            user_id = str(uuid.uuid4())
+            user_id = str(random.randint(10000000, 99999999))
+            while _get_profile_by_user_id(user_id):
+                user_id = str(random.randint(10000000, 99999999))
+                
             now = _now_iso()
             item = {
                 "userId": user_id,
