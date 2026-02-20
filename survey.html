@@ -294,41 +294,67 @@
       min-width: 520px;
     }
 
-    /* Column headers — NOT vertically sticky (breaks inside overflow-x container) */
-    /* Horizontal sticky (left: 0) on first col still works fine */
+    /* ── TRANSPOSED matrix: questions = rows, row-labels = columns ── */
+
+    /* Header row */
     .matrix-tbl th {
-      padding: 12px 16px;
+      padding: 14px 20px;
       background: var(--surface-2);
       border-bottom: 2px solid var(--bd-2);
       border-right: 1px solid var(--bd);
-      font-size: 11.5px; font-weight: 600; text-transform: uppercase;
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
       letter-spacing: .07em; color: var(--t2); text-align: left; white-space: nowrap;
-      min-width: 200px;
+      min-width: 220px;
     }
+    /* First header cell: "QUESTION" label */
     .matrix-tbl th:first-child {
-      min-width: 160px; max-width: 200px;
+      min-width: 220px; max-width: 280px;
       background: var(--surface-3);
       border-right: 2px solid var(--bd-2);
       position: sticky; left: 0; z-index: 4;
     }
-    .matrix-tbl th:last-child { min-width: 0; width: 50px; border-right: none; }
+    /* Last header cell: add-column button */
+    .matrix-tbl th.add-col-th {
+      min-width: 0; width: 52px; padding: 0; border-right: none; text-align: center;
+    }
+
+    /* Editable column key in header */
+    .col-key-input {
+      background: transparent; border: none; outline: none;
+      font-size: 12px; font-weight: 600; color: var(--t2); text-transform: uppercase;
+      letter-spacing: .07em; width: 100%; font-family: inherit; padding: 0; cursor: text;
+    }
+    .col-key-input:focus { color: var(--t1); }
+    .col-key-input::placeholder { color: var(--t3); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+    /* Add-column button (+ inside header cell) */
+    .add-col-btn {
+      width: 32px; height: 32px; border-radius: 8px; border: 1.5px dashed var(--bd-3);
+      background: transparent; color: var(--t3); cursor: pointer; font-size: 18px; font-weight: 300;
+      display: flex; align-items: center; justify-content: center;
+      margin: auto; transition: all var(--t-fast) var(--ease);
+    }
+    .add-col-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
 
     /* Data cells */
     .matrix-tbl td {
-      padding: 0; /* padding goes inside the cell wrapper for clean borders */
+      padding: 0;
       border-bottom: 1px solid var(--bd);
       border-right: 1px solid var(--bd);
-      vertical-align: middle;
+      vertical-align: top;
       background: var(--bg);
-      min-width: 200px;
+      min-width: 220px;
     }
+    /* First column: question label */
     .matrix-tbl td:first-child {
       background: var(--surface-2);
       border-right: 2px solid var(--bd-2);
       position: sticky; left: 0; z-index: 10;
-      min-width: 160px;
+      min-width: 220px; max-width: 280px;
+      vertical-align: middle;
     }
-    .matrix-tbl td:last-child { min-width: 0; width: 50px; border-right: none; }
+    /* Last column: delete button */
+    .matrix-tbl td.del-col-td { min-width: 0; width: 52px; border-right: none; vertical-align: middle; text-align: center; }
     .matrix-tbl tbody tr:last-child td { border-bottom: none; }
 
     /* Alternating rows */
@@ -339,24 +365,24 @@
     .matrix-tbl tbody tr:hover td            { background: var(--blue-dim) !important; }
     .matrix-tbl tbody tr:hover td:first-child { background: var(--surface-3) !important; }
 
-    /* Cell inner padding wrapper */
-    .cell-pad { padding: 10px 14px; }
+    /* Cell inner padding */
+    .cell-pad { padding: 14px 18px; }
 
-    /* Row label text */
-    .row-key-text {
-      font-size: 13.5px; font-weight: 600; color: var(--t1);
+    /* Question label cell */
+    .q-label-text {
+      font-size: 14px; font-weight: 600; color: var(--t1); line-height: 1.4;
     }
-    .row-key-input {
-      background: transparent; border: none; outline: none;
-      font-size: 13.5px; font-weight: 600; color: var(--t1);
-      width: 100%; font-family: inherit; padding: 0;
+    .q-type-tag {
+      display: inline-block; margin-top: 4px;
+      font-size: 10.5px; font-weight: 500; color: var(--t3);
+      text-transform: uppercase; letter-spacing: .05em;
     }
 
     /* Cell inputs */
     .cell-input {
       width: 100%;
       background: var(--bg); border: 1px solid var(--bd-2);
-      color: var(--t1); padding: 9px 11px; border-radius: 7px;
+      color: var(--t1); padding: 10px 12px; border-radius: 7px;
       font-size: 13.5px; outline: none; font-family: inherit;
       transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
       resize: vertical;
@@ -364,33 +390,22 @@
     .cell-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); background: var(--surface-1); }
     select.cell-input { cursor: pointer; }
 
-    .cell-cb-group { display: flex; flex-direction: column; gap: 8px; }
+    .cell-cb-group { display: flex; flex-direction: column; gap: 9px; }
     .cell-cb-item {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 9px;
       font-size: 13.5px; color: var(--t1); cursor: pointer;
     }
     .cell-cb-item:hover { color: var(--blue); }
     .cell-cb-item input { width: 15px; height: 15px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
 
-    /* Add row button */
-    .matrix-add-row {
-      display: flex; align-items: center; justify-content: center; gap: 7px;
-      width: 100%; padding: 14px;
-      border: none; border-top: 1px solid var(--bd-2);
-      background: var(--surface-1); color: var(--t3); font-size: 13px; font-weight: 500;
-      cursor: pointer; font-family: inherit;
+    /* Delete column button */
+    .col-del {
+      width: 28px; height: 28px; border-radius: 7px; border: 1px solid transparent;
+      background: transparent; color: var(--t3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto;
       transition: all var(--t-fast) var(--ease);
     }
-    .matrix-add-row:hover { background: var(--surface-2); color: var(--blue); }
-
-    /* Row delete */
-    .row-del {
-      width: 30px; height: 30px; border-radius: 7px; border: 1px solid transparent;
-      background: transparent; color: var(--t3); cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all var(--t-fast) var(--ease); margin: 0 auto;
-    }
-    .row-del:hover { background: var(--red-dim); color: var(--red); border-color: var(--bd-2); }
+    .col-del:hover { background: var(--red-dim); color: var(--red); border-color: var(--bd-2); }
 
     /* ── STICKY FOOTER ── */
     .sp-footer {
@@ -713,16 +728,16 @@
       document.getElementById('sp-matrix-tag')?.remove();
     }
 
-    /* ── Matrix form ── */
+    /* ── TRANSPOSED matrix: questions = rows, row-labels = columns ── */
     function renderMatrixForm() {
       const body = document.getElementById('sp-body');
       body.className = 'sp-body matrix';
       const n = surveyQuestions.length;
       const r = matrixRows.length;
       document.getElementById('surveyFooterMeta').textContent =
-        `${n} question${n!==1?'s':''} · ${r} row${r!==1?'s':''}`;
+        `${n} question${n!==1?'s':''} · ${r} column${r!==1?'s':''}`;
 
-      // Matrix context tag in header
+      // Matrix context tag
       if (!document.getElementById('sp-matrix-tag')) {
         const tag = document.createElement('div');
         tag.id        = 'sp-matrix-tag';
@@ -731,34 +746,44 @@
           <rect x="3" y="3" width="18" height="18" rx="2"/>
           <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
           <line x1="9" y1="3" x2="9" y2="21"/>
-        </svg> Matrix survey — fill in each row`;
+        </svg> Matrix survey — fill in each column`;
         document.querySelector('.sp-header-inner')?.appendChild(tag);
       }
 
-      const allowCustom = surveyDefinition?.allowCustomRows || false;
+      const allowCustom  = surveyDefinition?.allowCustomRows || false;
+      const fixedLabels  = surveyDefinition?.rowLabels || [];
 
-      // Header row
-      const ths = `<th>Row</th>` +
-        surveyQuestions.map(q => `<th>${esc(q.title)}</th>`).join('') +
-        (allowCustom ? `<th></th>` : '');
+      // ── HEADER: Question | S1 | S2 | [+] ──
+      const colHeaders = matrixRows.map((key, ri) => {
+        const isFixed = fixedLabels.includes(key) && !allowCustom;
+        return isFixed
+          ? `<th>${esc(key)}</th>`
+          : `<th><input type="text" class="col-key-input" id="mkey-${ri}" value="${esc(key)}"
+               placeholder="Label…" oninput="matrixRows[${ri}]=this.value"></th>`;
+      }).join('');
+      const addColTh = allowCustom
+        ? `<th class="add-col-th"><button type="button" class="add-col-btn" onclick="addMatrixRow()" title="Add column">+</button></th>`
+        : '';
+      const headerRow = `<tr><th>Question</th>${colHeaders}${addColTh}</tr>`;
 
-      // Data rows
-      function buildRow(key, ri) {
-        const isFixed = (surveyDefinition.rowLabels||[]).includes(key) && !allowCustom;
-        const keyCell = isFixed
-          ? `<td><div class="cell-pad"><span class="row-key-text">${esc(key)}</span></div></td>`
-          : `<td><div class="cell-pad"><input type="text" class="row-key-input" id="mkey-${ri}" value="${esc(key)}" placeholder="Row label…" oninput="matrixRows[${ri}]=this.value"></div></td>`;
+      // ── DATA ROWS: one per question ──
+      const dataRows = surveyQuestions.map(q => {
+        const typeLabel = {text:'Short Text',longtext:'Long Text',radio:'Single Choice',checkbox:'Multiple Choice'}[q.type] || q.type;
+        const qCell = `<td><div class="cell-pad">
+          <div class="q-label-text">${esc(q.title)}</div>
+          <div class="q-type-tag">${typeLabel}</div>
+        </div></td>`;
 
-        const cells = surveyQuestions.map(q => {
+        const dataCells = matrixRows.map((key, ri) => {
           if (q.type === 'text') {
             return `<td><div class="cell-pad"><input type="text" id="mcell-${q.id}-${ri}" class="cell-input" placeholder="…"></div></td>`;
           } else if (q.type === 'longtext') {
-            return `<td><div class="cell-pad"><textarea id="mcell-${q.id}-${ri}" class="cell-input" rows="2" placeholder="…"></textarea></div></td>`;
+            return `<td><div class="cell-pad"><textarea id="mcell-${q.id}-${ri}" class="cell-input" rows="3" placeholder="…"></textarea></div></td>`;
           } else if (q.type === 'radio') {
-            const opts = (q.options||[]).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            const opts = (q.options||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
             return `<td><div class="cell-pad"><select id="mcell-${q.id}-${ri}" class="cell-input"><option value="">— select —</option>${opts}</select></div></td>`;
           } else if (q.type === 'checkbox') {
-            const cbs = (q.options||[]).map(o =>
+            const cbs = (q.options||[]).map(o=>
               `<label class="cell-cb-item"><input type="checkbox" name="mcb-${q.id}-${ri}" value="${esc(o)}"> ${esc(o)}</label>`
             ).join('');
             return `<td><div class="cell-pad"><div class="cell-cb-group">${cbs}</div></div></td>`;
@@ -766,34 +791,35 @@
           return `<td></td>`;
         }).join('');
 
-        const delCell = allowCustom && !isFixed
-          ? `<td><button type="button" class="row-del" onclick="deleteMatrixRow(${ri})" title="Remove row">
-               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-               </svg>
-             </button></td>`
-          : (allowCustom ? `<td></td>` : '');
+        return `<tr>${qCell}${dataCells}${allowCustom?'<td class="del-col-td"></td>':''}  </tr>`;
+      }).join('');
 
-        return `<tr>${keyCell}${cells}${delCell}</tr>`;
+      // ── DELETE ROW (bottom row with × per custom column) ──
+      let delRow = '';
+      if (allowCustom) {
+        const delCells = matrixRows.map((key, ri) => {
+          const isFixed = fixedLabels.includes(key) && !allowCustom;
+          return isFixed ? `<td></td>`
+            : `<td class="del-col-td">
+                <button type="button" class="col-del" onclick="deleteMatrixRow(${ri})" title="Remove column">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+          </button>
+              </td>`;
+        }).join('');
+        delRow = `<tr style="background:var(--surface-1)!important;">
+          <td style="background:var(--surface-2)!important;border-right:2px solid var(--bd-2);"></td>
+          ${delCells}<td class="del-col-td"></td>
+        </tr>`;
       }
-
-      const tbody = matrixRows.map((key, ri) => buildRow(key, ri)).join('');
-
-      const addRowBtn = allowCustom
-        ? `<button type="button" class="matrix-add-row" onclick="addMatrixRow()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add Row
-          </button>` : '';
 
       document.getElementById('questions-container').innerHTML = `
         <div class="matrix-tbl-wrap">
           <table class="matrix-tbl">
-            <thead><tr>${ths}</tr></thead>
-            <tbody>${tbody}</tbody>
+            <thead>${headerRow}</thead>
+            <tbody>${dataRows}${delRow}</tbody>
           </table>
-          ${addRowBtn}
         </div>`;
     }
 
