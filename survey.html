@@ -580,6 +580,7 @@
     let surveyQuestions = [];
     let surveyDefinition = null;
     let matrixRows       = [];
+    let answerState      = {};  // tracks current answers for skip logic evaluation
 
     /* ── View management ── */
     function showView(id) {
@@ -668,17 +669,55 @@
       else          renderStandardForm();
     }
 
+    /* ── Skip Logic evaluation ── */
+    function _evalCond(c) {
+      const raw = answerState[c.targetId];
+      const ans = raw ?? '';
+      const val = c.value ?? '';
+      const isArr = Array.isArray(ans);
+      switch (c.operator) {
+        case 'eq':          return isArr ? ans.includes(val) : String(ans) === String(val);
+        case 'neq':         return isArr ? !ans.includes(val) : String(ans) !== String(val);
+        case 'contains':    return isArr ? ans.some(a => String(a).toLowerCase().includes(val.toLowerCase())) : String(ans).toLowerCase().includes(val.toLowerCase());
+        case 'not_contains':return isArr ? !ans.some(a => String(a).toLowerCase().includes(val.toLowerCase())) : !String(ans).toLowerCase().includes(val.toLowerCase());
+        case 'empty':       return !ans || (isArr && ans.length === 0) || ans === '';
+        case 'not_empty':   return !!ans && !(isArr && ans.length === 0) && ans !== '';
+        default: return true;
+      }
+    }
+
+    function _qVisible(q) {
+      if (!q.conditions?.length) return true;
+      const logic = q.conditionLogic || 'all';
+      const results = q.conditions.map(_evalCond);
+      return logic === 'any' ? results.some(Boolean) : results.every(Boolean);
+    }
+
+    function evaluateSkipLogic() {
+      surveyQuestions.forEach(q => {
+        const block = document.getElementById(`qblock-${q.id}`);
+        if (block) block.style.display = _qVisible(q) ? '' : 'none';
+      });
+    }
+
+    function _onAnswerChange(qId, value) {
+      answerState[qId] = value;
+      evaluateSkipLogic();
+    }
+
     /* ── Standard form ── */
     function renderStandardForm() {
       const body = document.getElementById('sp-body');
       body.className = 'sp-body standard';
+      answerState = {};
       const n = surveyQuestions.length;
       document.getElementById('surveyFooterMeta').textContent = `${n} question${n!==1?'s':''}`;
 
       let html = '<div class="sp-standard-inner">';
       surveyQuestions.forEach((q, idx) => {
+        const hasLogic = q.conditions?.length > 0;
         if (idx > 0) html += '<div class="q-divider"></div>';
-        html += `<div class="q-block">
+        html += `<div class="q-block" id="qblock-${q.id}"${hasLogic?' style="display:none;"':''}>
           <div class="q-label">
             <span class="q-num">${idx+1}</span>
             <span>${esc(q.title)}</span>
@@ -705,17 +744,20 @@
             html += `<textarea id="ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…" required></textarea>`;
           }
         } else if (q.type === 'radio') {
-          html += '<div class="choice-group">';
+          html += `<div class="choice-group">`;
           (q.options||[]).forEach(opt => {
             const s = esc(opt);
-            html += `<label class="choice-item"><input type="radio" name="ans-${q.id}" value="${s}" required><span class="choice-item-label">${s}</span></label>`;
+            html += `<label class="choice-item"><input type="radio" name="ans-${q.id}" value="${s}"
+              onchange="_onAnswerChange('${q.id}',this.value)"><span class="choice-item-label">${s}</span></label>`;
           });
           html += '</div>';
         } else if (q.type === 'checkbox') {
-          html += '<div class="choice-group">';
+          html += `<div class="choice-group">`;
           (q.options||[]).forEach(opt => {
             const s = esc(opt);
-            html += `<label class="choice-item"><input type="checkbox" name="ans-${q.id}" value="${s}"><span class="choice-item-label">${s}</span></label>`;
+            html += `<label class="choice-item"><input type="checkbox" name="ans-${q.id}" value="${s}"
+              onchange="_onAnswerChange('${q.id}',Array.from(document.querySelectorAll('input[name=\\'ans-${q.id}\\'\\]:checked')).map(e=>e.value))">
+              <span class="choice-item-label">${s}</span></label>`;
           });
           html += '</div>';
         }
@@ -724,8 +766,18 @@
       html += '</div>';
       document.getElementById('questions-container').innerHTML = html;
 
+      // Wire text/longtext inputs for skip logic
+      surveyQuestions.forEach(q => {
+        if (q.type === 'text' || q.type === 'longtext') {
+          const el = document.getElementById(`ans-${q.id}`);
+          if (el) el.addEventListener('input', () => _onAnswerChange(q.id, el.value));
+        }
+      });
+
       // Remove matrix tag if present
       document.getElementById('sp-matrix-tag')?.remove();
+      // Evaluate once in case conditions reference questions with default answers
+      evaluateSkipLogic();
     }
 
     /* ── TRANSPOSED matrix: questions = rows, row-labels = columns ── */
