@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10xQuery - Create and Share Surveys</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --panel: #ffffff;
+      --border: #eaeaea;
+      --text: #111111;
+      --muted: #666666;
+      --primary: #0070f3;
+      --primary-hover: #0051a8;
+      --accent: #10b981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
+    .container { max-width: 800px; margin: 0 auto; background: var(--panel); padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    p { color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+    .btn:hover { background: var(--primary-hover); }
+    .survey-list { margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
+    .survey-card { padding: 16px; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .survey-card h3 { font-size: 16px; margin-bottom: 4px; }
+    .survey-card p { margin-bottom: 0; font-size: 14px; }
+    .auth-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+    input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>10xQuery</h1>
+    <p>Create powerful, shareable surveys in seconds. Start collecting responses and analyzing data today.</p>
+    
+    <div id="app">
+      <div id="auth" class="auth-section">
+        <h3>Sign In</h3>
+        <input type="email" id="email" placeholder="you@example.com">
+        <input type="password" id="password" placeholder="Password">
+        <button class="btn" onclick="login()">Log In / Sign Up</button>
+      </div>
+
+      <div id="dashboard" style="display:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h3>Your Surveys</h3>
+          <button class="btn" onclick="createSurvey()">+ New Survey</button>
+        </div>
+        <div class="survey-list" id="surveys">
+          <!-- Surveys loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
+    let user = null;
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        let res = await fetch(`${API}/v1/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) {
+          res = await fetch(`${API}/v1/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+        }
+        if (!res.ok) throw new Error('Auth failed');
+        const data = await res.json();
+        user = data.user;
+        document.getElementById('auth').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadSurveys();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function loadSurveys() {
+      if (!user) return;
+      const res = await fetch(`${API}/v1/surveys?userId=${user.userId}`);
+      if (res.ok) {
+        const surveys = await res.json();
+        const html = surveys.map(s => `
+          <div class="survey-card">
+            <div>
+              <h3>${s.title}</h3>
+              <p>${s.status}</p>
+            </div>
+            <div>
+              <button class="btn" onclick="alert('Share link: https://www.10xquery.com/survey.html?id=${s.surveyId}')">Share</button>
+            </div>
+          </div>
+        `).join('');
+        document.getElementById('surveys').innerHTML = html || '<p>No surveys yet.</p>';
+      }
+    }
+
+    async function createSurvey() {
+      const title = prompt("Survey Title:");
+      if (!title) return;
+      await fetch(`${API}/v1/surveys`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, userId: user.userId })
+      });
+      loadSurveys();
+    }
+  </script>
+</body>
+</html>

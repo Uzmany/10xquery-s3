@@ -1,0 +1,75 @@
+#!/bin/bash
+set -e
+
+# --- Config ---
+S3_BUCKET="s3://www.10xquery.com/"
+CF_DIST_WWW=""
+CF_DIST_APEX=""
+EC2_HOST="ec2-user@54.242.99.16"
+EC2_KEY="$HOME/.ssh/10xquery_backend.pem"
+EC2_APP_DIR="/home/ec2-user/10xquery-s3/10xquery-api"
+
+# Files to exclude from S3 upload
+S3_EXCLUDES=(
+  --exclude ".git/*"
+  --exclude ".DS_Store"
+  --exclude ".gitignore"
+  --exclude "10xquery-api/*"
+  --exclude "push-and-publish"
+  --exclude "README.md"
+  --exclude "ARCHITECTURE.md"
+  --exclude "*.pem"
+  --exclude "client_secret_*.json"
+)
+
+# --- Helpers ---
+info()  { echo -e "\033[1;34m▸ $1\033[0m"; }
+ok()    { echo -e "\033[1;32m✔ $1\033[0m"; }
+fail()  { echo -e "\033[1;31m✖ $1\033[0m"; exit 1; }
+
+# --- Validate commit message ---
+MSG="$*"
+if [ -z "$MSG" ]; then
+  fail "Usage: ./push-and-publish <commit message>"
+fi
+
+# --- 1. Git add, commit, push ---
+info "Committing and pushing..."
+git add .
+git commit -m "$MSG" || echo "Nothing to commit, continuing..."
+git push
+ok "Pushed to GitHub"
+
+# --- 2. Sync to S3 ---
+info "Syncing to S3..."
+# Using --delete to remove files that shouldn't be there (like ketzek-api/ if it was uploaded previously)
+aws s3 sync . "$S3_BUCKET" --delete "${S3_EXCLUDES[@]}"
+ok "S3 synced"
+
+# --- 3. Invalidate CloudFront ---
+info "Invalidating CloudFront..."
+aws cloudfront create-invalidation --distribution-id "$CF_DIST_WWW" --paths "/*" --output text > /dev/null
+aws cloudfront create-invalidation --distribution-id "$CF_DIST_APEX" --paths "/*" --output text > /dev/null
+ok "CloudFront invalidations created"
+
+# --- 4. Restart backend on EC2 ---
+info "Restarting backend on EC2..."
+ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" "$EC2_HOST" bash -s <<'REMOTE'
+  cd /home/ec2-user/10xquery-s3/10xquery-api
+  git pull
+  sudo kill $(pgrep -f "uvicorn app.main:app --host 0.0.0.0 --port 8000") 2>/dev/null || true
+  sleep 1
+  sudo nohup .venv/bin/python3 .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --access-log > /tmp/10xquery_uvicorn.log 2>&1 &
+  disown
+  sleep 2
+  if pgrep -f "uvicorn app.main:app --host 0.0.0.0 --port 8000" > /dev/null; then
+    echo "SERVER_OK"
+  else
+    echo "SERVER_FAIL"
+  fi
+REMOTE
+
+ok "Backend restarted"
+
+echo ""
+echo -e "\033[1;32m🚀 Deploy complete!\033[0m"

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Take Survey - 10xQuery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --panel: #ffffff;
+      --border: #eaeaea;
+      --text: #111111;
+      --muted: #666666;
+      --primary: #0070f3;
+      --primary-hover: #0051a8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
+    .container { max-width: 600px; margin: 0 auto; background: var(--panel); padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p { color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; width: 100%; transition: background 0.2s; }
+    .btn:hover { background: var(--primary-hover); }
+    textarea { width: 100%; padding: 10px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px; min-height: 100px; resize: vertical; }
+  </style>
+</head>
+<body>
+  <div class="container" id="survey-container">
+    <h1 id="title">Loading...</h1>
+    <p id="desc"></p>
+    
+    <div id="questions">
+      <!-- Default single question for MVP -->
+      <label style="display:block;margin-bottom:8px;font-weight:500;">Your thoughts:</label>
+      <textarea id="answer"></textarea>
+      <button class="btn" onclick="submit()">Submit</button>
+    </div>
+    <div id="thanks" style="display:none; text-align:center;">
+      <h3>Thanks for your response!</h3>
+    </div>
+  </div>
+
+  <script>
+    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
+    const params = new URLSearchParams(window.location.search);
+    const surveyId = params.get('id');
+
+    async function load() {
+      if (!surveyId) {
+        document.getElementById('title').textContent = "Survey not found";
+        return;
+      }
+      const res = await fetch(`${API}/v1/surveys/${surveyId}`);
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('title').textContent = data.title;
+        document.getElementById('desc').textContent = data.description || '';
+      } else {
+        document.getElementById('title').textContent = "Survey not found";
+      }
+    }
+
+    async function submit() {
+      const answer = document.getElementById('answer').value;
+      const res = await fetch(`${API}/v1/surveys/${surveyId}/responses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: { q1: answer } })
+      });
+      if (res.ok) {
+        document.getElementById('questions').style.display = 'none';
+        document.getElementById('thanks').style.display = 'block';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
