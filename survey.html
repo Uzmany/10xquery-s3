@@ -84,7 +84,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           <span class="text-sm font-medium">This survey is private.</span>
         </div>
-        <form onsubmit="handleAuth(event)">
+        <form onsubmit="event.preventDefault(); handleAuth(event);">
           <div class="mb-6">
             <label class="block text-sm font-medium text-textMuted mb-2">Access ID</label>
             <input type="text" id="viewerId" class="input-field text-center tracking-widest font-mono text-lg" placeholder="12345678" required autocomplete="off" maxlength="8">
@@ -103,7 +103,7 @@
           <p id="desc" class="text-textMuted text-lg leading-relaxed"></p>
         </div>
         
-        <form onsubmit="handleSubmit(event)" id="survey-form">
+        <form onsubmit="event.preventDefault(); handleSubmit(event);" id="survey-form">
           <div class="mb-8">
             <label class="block text-base font-medium text-textMain mb-4">Your response</label>
             <textarea id="answer" class="input-field resize-y min-h-[160px] p-4 text-base leading-relaxed" placeholder="Type your answer here..." required></textarea>
