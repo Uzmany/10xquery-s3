@@ -294,8 +294,8 @@
       min-width: 520px;
     }
 
-    /* Sticky column headers */
-    .matrix-tbl thead { position: sticky; top: var(--nav-h); z-index: 20; }
+    /* Column headers — NOT vertically sticky (breaks inside overflow-x container) */
+    /* Horizontal sticky (left: 0) on first col still works fine */
     .matrix-tbl th {
       padding: 12px 16px;
       background: var(--surface-2);
@@ -309,7 +309,7 @@
       min-width: 160px; max-width: 200px;
       background: var(--surface-3);
       border-right: 2px solid var(--bd-2);
-      position: sticky; left: 0; z-index: 21; /* above other sticky ths */
+      position: sticky; left: 0; z-index: 4;
     }
     .matrix-tbl th:last-child { min-width: 0; width: 50px; border-right: none; }
 
