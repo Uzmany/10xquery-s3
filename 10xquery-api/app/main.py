@@ -70,6 +70,12 @@ class SurveyDefinitionRequest(BaseModel):
 class SurveyResponseRequest(BaseModel):
     responderId: Optional[str] = None
     answers: dict[str, Any]
+    rowKeys: Optional[List[str]] = None
+
+class UpdateResponseRequest(BaseModel):
+    userId: str
+    answers: dict[str, Any]
+    rowKeys: Optional[List[str]] = None
 
 def _pk(survey_id: str) -> str:
     return f"SRV#{survey_id}"
@@ -248,6 +254,7 @@ def submit_response(survey_id: str, req: Request, body: SurveyResponseRequest):
         "SK": f"RESP#{ts}#{resp_id}",
         "responderId": body.responderId,
         "answers": ddb_answers,
+        "rowKeys": body.rowKeys or [],
         "ip": ip,
         "ts": ts
     })
@@ -280,10 +287,39 @@ def list_responses(survey_id: str, userId: str):
             "responseId": i["SK"].split("#")[-1],
             "ts": i.get("ts"),
             "responderId": i.get("responderId"),
-            "answers": _decimal_to_native(i.get("answers", {}))
+            "answers": _decimal_to_native(i.get("answers", {})),
+            "rowKeys": i.get("rowKeys", [])
         }
         for i in sorted(items, key=lambda x: x.get("ts", ""))
     ]
+
+@app.put("/v1/surveys/{survey_id}/responses/{response_id}", tags=["surveys"])
+def update_response(survey_id: str, response_id: str, body: UpdateResponseRequest):
+    _ensure_owner(survey_id, body.userId)
+
+    resp = table.query(
+        KeyConditionExpression="PK = :pk AND begins_with(SK, :p)",
+        ExpressionAttributeValues={":pk": _pk(survey_id), ":p": "RESP#"}
+    )
+    item = next((i for i in resp.get("Items", []) if i["SK"].endswith(response_id)), None)
+    if not item:
+        raise HTTPException(404, "Response not found")
+
+    def to_ddb(obj):
+        if isinstance(obj, float): return Decimal(str(obj))
+        if isinstance(obj, list):  return [to_ddb(v) for v in obj]
+        if isinstance(obj, dict):  return {k: to_ddb(v) for k, v in obj.items()}
+        return obj
+
+    table.update_item(
+        Key={"PK": item["PK"], "SK": item["SK"]},
+        UpdateExpression="SET answers = :a, rowKeys = :rk",
+        ExpressionAttributeValues={
+            ":a":  to_ddb(body.answers),
+            ":rk": body.rowKeys if body.rowKeys is not None else item.get("rowKeys", [])
+        }
+    )
+    return {"ok": True}
 
 @app.delete("/v1/surveys/{survey_id}", tags=["surveys"])
 def delete_survey(survey_id: str, userId: str):

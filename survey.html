@@ -286,6 +286,63 @@
     }
     .multi-slot-item .field-input { flex: 1; }
 
+    /* ── Matrix survey form ── */
+    .matrix-form-wrap { overflow-x: auto; margin-bottom: 8px; }
+    .matrix-form-tbl { width: 100%; border-collapse: collapse; min-width: 400px; }
+    .matrix-form-tbl th {
+      padding: 10px 12px; background: var(--surface-2);
+      border-bottom: 2px solid var(--bd-2); border-right: 1px solid var(--bd);
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--t2); white-space: nowrap; text-align: left;
+    }
+    .matrix-form-tbl th:first-child { min-width: 130px; border-right: 2px solid var(--bd-2); position: sticky; left: 0; z-index: 2; }
+    .matrix-form-tbl td {
+      padding: 8px; border-bottom: 1px solid var(--bd); border-right: 1px solid var(--bd);
+      vertical-align: top; background: var(--bg);
+    }
+    .matrix-form-tbl td:first-child {
+      background: var(--surface-2); border-right: 2px solid var(--bd-2);
+      position: sticky; left: 0; z-index: 1;
+    }
+    .matrix-form-tbl tbody tr:last-child td { border-bottom: none; }
+    .matrix-form-tbl .m-key-input {
+      background: transparent; border: none; outline: none; color: var(--t1);
+      font-size: 13px; font-weight: 600; width: 100%; font-family: inherit;
+      padding: 2px 0;
+    }
+    .matrix-form-tbl .m-cell-input {
+      width: 100%; background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 7px 9px; border-radius: 6px;
+      font-size: 13px; outline: none; font-family: inherit;
+      transition: border-color var(--t-fast) var(--ease);
+      resize: vertical;
+    }
+    .matrix-form-tbl .m-cell-input:focus { border-color: var(--blue); }
+    .matrix-form-tbl select.m-cell-input { cursor: pointer; height: 36px; }
+    .matrix-form-tbl .m-cb-group { display: flex; flex-direction: column; gap: 6px; padding: 2px 0; }
+    .matrix-form-tbl .m-cb-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 13px; color: var(--t1); cursor: pointer;
+    }
+    .matrix-form-tbl .m-cb-item input { width: 14px; height: 14px; accent-color: var(--blue); flex-shrink: 0; }
+    .matrix-add-row-btn {
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      width: 100%; padding: 11px; margin-top: 0;
+      border: none; border-top: 1px solid var(--bd-2);
+      background: var(--surface-1); color: var(--t3); font-size: 13px;
+      font-weight: 500; cursor: pointer; font-family: inherit;
+      border-radius: 0 0 var(--r-xl) var(--r-xl);
+      transition: all var(--t-fast) var(--ease);
+    }
+    .matrix-add-row-btn:hover { background: var(--surface-2); color: var(--blue); }
+    .matrix-del-row {
+      width: 24px; height: 24px; border-radius: 5px; border: none;
+      background: transparent; color: var(--t3); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .matrix-del-row:hover { background: var(--red-dim); color: var(--red); }
+
     /* ─────────────────────────────────────────────────
        AUTH GATE
     ───────────────────────────────────────────────── */
@@ -528,8 +585,10 @@
 
     const params    = new URLSearchParams(location.search);
     const surveyId  = params.get('id');
-    let currentUserId = null;
+    let currentUserId   = null;
     let surveyQuestions = [];
+    let surveyDefinition = null;  // full definition incl. rowLabels
+    let matrixRows = [];          // active row keys during form fill
 
     /* ── View management ── */
     function showView(id) {
@@ -583,11 +642,13 @@
         const defUrl = `${API}/v1/surveys/${surveyId}/definition${userId ? `?userId=${userId}` : ''}`;
         const defRes = await fetch(defUrl);
           if (defRes.ok) {
-            const defData = await defRes.json();
-            surveyQuestions = defData.questions || [];
+          surveyDefinition = await defRes.json();
+          surveyQuestions  = surveyDefinition.questions || [];
           if (!surveyQuestions.length) {
             surveyQuestions = [{ id: 'q1', type: 'longtext', title: 'Your response' }];
           }
+          // Init matrixRows from definition labels (or empty if allowCustomRows only)
+          matrixRows = (surveyDefinition.rowLabels || []).slice();
         }
 
         renderQuestions();
@@ -605,77 +666,134 @@
 
     /* ── Render questions ── */
     function renderQuestions() {
+      const isMatrix = (surveyDefinition?.rowLabels?.length > 0) || surveyDefinition?.allowCustomRows;
+      if (isMatrix) {
+        renderMatrixForm();
+      } else {
+        renderStandardForm();
+      }
+    }
+
+    /* Standard (non-matrix) form — same as before */
+    function renderStandardForm() {
       const container = document.getElementById('questions-container');
       let html = '';
-
       surveyQuestions.forEach((q, idx) => {
         if (idx > 0) html += '<div class="q-divider"></div>';
-
         html += `<div class="q-block">
           <div class="q-number-label">
             <div class="q-num-badge">${idx + 1}</div>
             <span class="q-title">${esc(q.title)}<span class="q-required">*</span></span>
           </div>`;
-
         if (q.type === 'text') {
           const slots = q.slots || 1;
           if (slots > 1) {
             html += `<div class="multi-slot-group">`;
-            for (let i = 0; i < slots; i++) {
-              html += `<div class="multi-slot-item">
-                <span class="multi-slot-num">${i + 1}</span>
-                <input type="text" id="ans-${q.id}-${i}" class="field-input" placeholder="Entry ${i + 1}…">
-              </div>`;
-            }
+            for (let i = 0; i < slots; i++)
+              html += `<div class="multi-slot-item"><span class="multi-slot-num">${i+1}</span><input type="text" id="ans-${q.id}-${i}" class="field-input" placeholder="Entry ${i+1}…"></div>`;
             html += `</div>`;
           } else {
             html += `<input type="text" id="ans-${q.id}" class="field-input" placeholder="Your answer…" required>`;
           }
-
         } else if (q.type === 'longtext') {
           const slots = q.slots || 1;
           if (slots > 1) {
             html += `<div class="multi-slot-group">`;
-            for (let i = 0; i < slots; i++) {
-              html += `<div class="multi-slot-item">
-                <span class="multi-slot-num">${i + 1}</span>
-                <textarea id="ans-${q.id}-${i}" class="field-input" rows="2" placeholder="Entry ${i + 1}…"></textarea>
-              </div>`;
-            }
+            for (let i = 0; i < slots; i++)
+              html += `<div class="multi-slot-item"><span class="multi-slot-num">${i+1}</span><textarea id="ans-${q.id}-${i}" class="field-input" rows="2" placeholder="Entry ${i+1}…"></textarea></div>`;
             html += `</div>`;
           } else {
             html += `<textarea id="ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…" required></textarea>`;
           }
-
         } else if (q.type === 'radio') {
           html += `<div class="choice-group">`;
-          (q.options || []).forEach(opt => {
-            const safeOpt = esc(opt);
-            html += `
-              <label class="choice-item">
-                <input type="radio" name="ans-${q.id}" value="${safeOpt}" required>
-                <span class="choice-item-label">${safeOpt}</span>
-              </label>`;
+          (q.options||[]).forEach(opt => {
+            const s = esc(opt);
+            html += `<label class="choice-item"><input type="radio" name="ans-${q.id}" value="${s}" required><span class="choice-item-label">${s}</span></label>`;
           });
           html += `</div>`;
-
         } else if (q.type === 'checkbox') {
           html += `<div class="choice-group">`;
-          (q.options || []).forEach(opt => {
-            const safeOpt = esc(opt);
-            html += `
-              <label class="choice-item">
-                <input type="checkbox" name="ans-${q.id}" value="${safeOpt}">
-                <span class="choice-item-label">${safeOpt}</span>
-              </label>`;
+          (q.options||[]).forEach(opt => {
+            const s = esc(opt);
+            html += `<label class="choice-item"><input type="checkbox" name="ans-${q.id}" value="${s}"><span class="choice-item-label">${s}</span></label>`;
           });
           html += `</div>`;
         }
-        
         html += `</div>`;
       });
-
       container.innerHTML = html;
+    }
+
+    /* Matrix form: rows × questions table */
+    function renderMatrixForm() {
+      const container = document.getElementById('questions-container');
+      const allowCustom = surveyDefinition?.allowCustomRows || false;
+
+      // Column headers
+      const headerCols = `<th>Row</th>` +
+        surveyQuestions.map(q => `<th>${esc(q.title)}</th>`).join('') +
+        (matrixRows.length > 0 ? `<th style="width:32px;"></th>` : '');
+
+      // Data rows
+      function buildRow(key, ri) {
+        const isFixed = (surveyDefinition.rowLabels||[]).includes(key) && !allowCustom;
+        const keyCell = isFixed
+          ? `<td><span class="m-key-input" style="cursor:default;">${esc(key)}</span></td>`
+          : `<td><input type="text" class="m-key-input" id="mkey-${ri}" value="${esc(key)}" placeholder="Row label…" oninput="matrixRows[${ri}]=this.value"></td>`;
+        const cells = surveyQuestions.map(q => {
+          if (q.type === 'text') {
+            return `<td><input type="text" id="mcell-${q.id}-${ri}" class="m-cell-input" placeholder="…"></td>`;
+          } else if (q.type === 'longtext') {
+            return `<td><textarea id="mcell-${q.id}-${ri}" class="m-cell-input" rows="2" placeholder="…"></textarea></td>`;
+          } else if (q.type === 'radio') {
+            const opts = (q.options||[]).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+            return `<td><select id="mcell-${q.id}-${ri}" class="m-cell-input"><option value="">—</option>${opts}</select></td>`;
+          } else if (q.type === 'checkbox') {
+            const cbs = (q.options||[]).map(o =>
+              `<label class="m-cb-item"><input type="checkbox" name="mcb-${q.id}-${ri}" value="${esc(o)}"> ${esc(o)}</label>`
+            ).join('');
+            return `<td><div class="m-cb-group">${cbs}</div></td>`;
+          }
+          return `<td></td>`;
+        }).join('');
+        const delCell = allowCustom && !isFixed
+          ? `<td style="vertical-align:middle;"><button class="matrix-del-row" onclick="deleteMatrixRow(${ri})" title="Remove row"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>`
+          : (matrixRows.length > 0 ? `<td></td>` : '');
+        return `<tr>${keyCell}${cells}${delCell}</tr>`;
+      }
+
+      const bodyRows = matrixRows.map((key, ri) => buildRow(key, ri)).join('');
+
+      const addRowBtn = allowCustom
+        ? `<button class="matrix-add-row-btn" type="button" onclick="addMatrixRow()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Row
+          </button>` : '';
+
+      container.innerHTML = `
+        <div class="matrix-form-wrap">
+          <table class="matrix-form-tbl">
+            <thead><tr>${headerCols}</tr></thead>
+            <tbody id="matrix-tbody">${bodyRows}</tbody>
+          </table>
+        </div>
+        ${addRowBtn}`;
+    }
+
+    function addMatrixRow() {
+      matrixRows.push('');
+      renderMatrixForm();
+      // Focus the new key input
+      const newIdx = matrixRows.length - 1;
+      setTimeout(() => document.getElementById(`mkey-${newIdx}`)?.focus(), 50);
+    }
+
+    function deleteMatrixRow(ri) {
+      matrixRows.splice(ri, 1);
+      renderMatrixForm();
     }
 
     function esc(str) {
@@ -706,28 +824,52 @@
     /* ── Submit handler ── */
     async function handleSubmit(e) {
       const answers = {};
-      
+      const isMatrix = (surveyDefinition?.rowLabels?.length > 0) || surveyDefinition?.allowCustomRows;
+
+      if (isMatrix) {
+        // Sync any edited key inputs back to matrixRows
+        matrixRows.forEach((_, ri) => {
+          const keyEl = document.getElementById(`mkey-${ri}`);
+          if (keyEl) matrixRows[ri] = keyEl.value.trim() || `Row ${ri+1}`;
+        });
+        // Collect per-row, per-question answers
+        for (const q of surveyQuestions) {
+          answers[q.id] = {};
+          matrixRows.forEach((key, ri) => {
+            const k = key || `Row ${ri+1}`;
+            if (q.type === 'text' || q.type === 'longtext') {
+              answers[q.id][k] = document.getElementById(`mcell-${q.id}-${ri}`)?.value.trim() || '';
+            } else if (q.type === 'radio') {
+              answers[q.id][k] = document.getElementById(`mcell-${q.id}-${ri}`)?.value || '';
+            } else if (q.type === 'checkbox') {
+              answers[q.id][k] = Array.from(
+                document.querySelectorAll(`input[name="mcb-${q.id}-${ri}"]:checked`)
+              ).map(el => el.value);
+            }
+          });
+        }
+      } else {
+        // Standard form collection
       for (const q of surveyQuestions) {
         if (q.type === 'text' || q.type === 'longtext') {
-          const slots = q.slots || 1;
-          if (slots > 1) {
-            // Collect all slot values as an ordered array
-            answers[q.id] = Array.from({length: slots}, (_, i) => {
-              const el = document.getElementById(`ans-${q.id}-${i}`);
-              return el ? el.value.trim() : '';
-            });
-          } else {
-            const el = document.getElementById(`ans-${q.id}`);
-            if (el) answers[q.id] = el.value.trim();
-          }
-
+            const slots = q.slots || 1;
+            if (slots > 1) {
+              answers[q.id] = Array.from({length: slots}, (_, i) => {
+                const el = document.getElementById(`ans-${q.id}-${i}`);
+                return el ? el.value.trim() : '';
+              });
+            } else {
+              const el = document.getElementById(`ans-${q.id}`);
+              if (el) answers[q.id] = el.value.trim();
+            }
         } else if (q.type === 'radio') {
           const checked = document.querySelector(`input[name="ans-${q.id}"]:checked`);
           if (checked) answers[q.id] = checked.value;
-
         } else if (q.type === 'checkbox') {
-          const checked = document.querySelectorAll(`input[name="ans-${q.id}"]:checked`);
-          answers[q.id] = Array.from(checked).map(el => el.value);
+            answers[q.id] = Array.from(
+              document.querySelectorAll(`input[name="ans-${q.id}"]:checked`)
+            ).map(el => el.value);
+          }
         }
       }
       
@@ -736,8 +878,10 @@
       btn.innerHTML = '<div class="spinner"></div> Submitting…';
       
       try {
+        const isMatrix2 = (surveyDefinition?.rowLabels?.length > 0) || surveyDefinition?.allowCustomRows;
         const payload = { answers };
         if (currentUserId) payload.responderId = currentUserId;
+        if (isMatrix2) payload.rowKeys = matrixRows.map((k, ri) => k || `Row ${ri+1}`);
         
         const res = await fetch(`${API}/v1/surveys/${surveyId}/responses`, {
           method: 'POST',
