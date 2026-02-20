@@ -1,142 +1,368 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>10xQuery - Create and Share Surveys</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #fafafa;
-      --panel: #ffffff;
-      --border: #eaeaea;
-      --text: #111111;
-      --muted: #666666;
-      --primary: #0070f3;
-      --primary-hover: #0051a8;
-      --accent: #10b981;
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            background: '#0a0a0a',
+            surface: '#111111',
+            border: '#222222',
+            textMain: '#ededed',
+            textMuted: '#a1a1aa',
+            primary: '#0070f3',
+            primaryHover: '#0051a8'
+          }
+        }
+      }
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
-    .container { max-width: 800px; margin: 0 auto; background: var(--panel); padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-    h1 { font-size: 28px; margin-bottom: 8px; }
-    p { color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: background 0.2s; }
-    .btn:hover { background: var(--primary-hover); }
-    .survey-list { margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
-    .survey-card { padding: 16px; border: 1px solid var(--border); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .survey-card h3 { font-size: 16px; margin-bottom: 4px; }
-    .survey-card p { margin-bottom: 0; font-size: 14px; }
-    .auth-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
-    input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px; }
+  </script>
+  <style>
+    body { background-color: #0a0a0a; color: #ededed; -webkit-font-smoothing: antialiased; }
+    
+    .glass-panel {
+      background: rgba(17, 17, 17, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid #222222;
+    }
+    
+    .input-field {
+      width: 100%; background: #000; border: 1px solid #333; color: #fff;
+      padding: 12px 16px; border-radius: 8px; outline: none; transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .input-field:focus { border-color: #0070f3; box-shadow: 0 0 0 1px #0070f3; }
+    
+    .btn-primary {
+      background: #ededed; color: #0a0a0a; border: none; padding: 10px 18px;
+      border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    
+    .btn-secondary {
+      background: #111; border: 1px solid #333; color: #ededed; padding: 10px 18px;
+      border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-secondary:hover { background: #222; border-color: #444; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: #111; border: 1px solid #333; border-radius: 12px; padding: 32px; width: 100%; max-width: 460px;
+      transform: scale(0.95); transition: transform 0.2s; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .modal-overlay.active .modal-content { transform: scale(1); }
+    
+    /* Custom Radio */
+    .radio-group { display: flex; gap: 12px; margin-bottom: 20px; }
+    .radio-label {
+      flex: 1; border: 1px solid #333; border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; color: #a1a1aa; background: #000;
+    }
+    .radio-label:hover { border-color: #555; }
+    .radio-input:checked + .radio-label { border-color: #0070f3; color: #fff; background: rgba(0, 112, 243, 0.1); }
+    .radio-input { display: none; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; background: #fff; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 500; font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h1>10xQuery</h1>
-    <p>Create powerful, shareable surveys in seconds. Start collecting responses and analyzing data today.</p>
+<body class="flex flex-col min-h-screen">
+
+  <nav class="border-b border-border bg-surface h-16 flex items-center px-8 justify-between shrink-0">
+    <div class="font-bold text-lg tracking-tight">10xQuery</div>
+    <div id="nav-user-info" class="hidden flex items-center gap-4 text-sm text-textMuted">
+      <span class="bg-background border border-border px-3 py-1 rounded-md font-mono" id="navUserId"></span>
+      <button onclick="logout()" class="hover:text-textMain transition-colors">Log Out</button>
+    </div>
+  </nav>
+
+  <main class="flex-1 w-full max-w-5xl mx-auto p-8 flex flex-col items-center justify-center">
     
-    <div id="app">
-      <div id="auth" class="auth-section">
-        <h3>Sign In</h3>
-        <input type="email" id="email" placeholder="you@example.com">
-        <input type="password" id="password" placeholder="Password">
-        <button class="btn" onclick="login()">Log In / Sign Up</button>
+    <!-- Auth Section -->
+    <div id="auth-view" class="w-full max-w-sm w-full">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold mb-2 tracking-tight">Welcome back</h1>
+        <p class="text-textMuted">Enter your details to sign in or create an account.</p>
       </div>
-
-      <div id="dashboard" style="display:none;">
-        <div style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 12px; border-radius: 6px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <span style="font-size: 14px; color: #4338ca; font-weight: 500;">Your User ID:</span>
-            <strong style="font-size: 18px; color: #3730a3; margin-left: 8px;" id="displayUserId"></strong>
+      
+      <div class="glass-panel p-8 rounded-xl shadow-2xl">
+        <form onsubmit="handleLogin(event)">
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-textMuted mb-2">Email</label>
+            <input type="email" id="email" class="input-field" placeholder="you@example.com" required>
           </div>
-          <span style="font-size: 12px; color: #6366f1;">Share this ID with others so they can invite you to private surveys.</span>
+          <div class="mb-8">
+            <label class="block text-sm font-medium text-textMuted mb-2">Password</label>
+            <input type="password" id="password" class="input-field" placeholder="••••••••" required>
+          </div>
+          <button type="submit" id="loginBtn" class="btn-primary w-full">Continue</button>
+          <div id="auth-error" class="text-red-500 text-sm mt-4 text-center hidden"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-view" class="w-full hidden mt-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
+        <div>
+          <h2 class="text-3xl font-bold tracking-tight">Surveys</h2>
+          <p class="text-textMuted mt-1">Manage your public and private data collections.</p>
+        </div>
+        <button onclick="openModal()" class="btn-primary mt-4 md:mt-0 flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          New Survey
+        </button>
+      </div>
+
+      <div id="surveys-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Surveys injected here -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Create Survey Modal -->
+  <div id="createModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3 class="text-xl font-bold mb-6">Create New Survey</h3>
+      <form onsubmit="handleCreateSurvey(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-textMuted mb-2">Title</label>
+          <input type="text" id="surveyTitle" class="input-field" placeholder="e.g. Q3 Engineering Feedback" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-textMuted mb-2">Description</label>
+          <input type="text" id="surveyDesc" class="input-field" placeholder="Optional brief description">
+        </div>
+        
+        <label class="block text-sm font-medium text-textMuted mb-2">Visibility</label>
+        <div class="radio-group">
+          <input type="radio" name="visibility" id="vis-public" value="public" class="radio-input" checked onchange="toggleAllowedUsers()">
+          <label for="vis-public" class="radio-label">Public</label>
+          
+          <input type="radio" name="visibility" id="vis-private" value="private" class="radio-input" onchange="toggleAllowedUsers()">
+          <label for="vis-private" class="radio-label flex items-center justify-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Private
+          </label>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-          <h3>Your Surveys</h3>
-          <button class="btn" onclick="createSurvey()">+ New Survey</button>
+        <div id="allowedUsersGroup" class="mb-8 hidden">
+          <label class="block text-sm font-medium text-textMuted mb-2">Allowed User IDs</label>
+          <textarea id="allowedUsers" class="input-field resize-none h-20" placeholder="Paste 8-digit IDs separated by commas..."></textarea>
+          <p class="text-xs text-textMuted mt-2">Only these exact IDs will be able to view and submit responses.</p>
         </div>
-        <div class="survey-list" id="surveys">
-          <!-- Surveys loaded here -->
+
+        <div class="flex justify-end gap-3">
+          <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
+          <button type="submit" id="createBtn" class="btn-primary">Create Survey</button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 
+  <div id="toast">Copied to clipboard</div>
+
   <script>
     const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
-    let user = null;
+    let currentUser = null;
 
-    async function login() {
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+      const btn = document.getElementById('loginBtn');
+      const errDiv = document.getElementById('auth-error');
+      
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+      errDiv.classList.add('hidden');
+
       try {
         let res = await fetch(`${API}/v1/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
         if (!res.ok) {
           res = await fetch(`${API}/v1/users`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
           });
         }
-        if (!res.ok) throw new Error('Auth failed');
+        
         const data = await res.json();
-        user = data.user;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('displayUserId').textContent = user.userId;
+        if (!res.ok) throw new Error(data.detail || 'Authentication failed');
+        
+        currentUser = data.user;
+        document.getElementById('auth-view').classList.add('hidden');
+        document.getElementById('dashboard-view').classList.remove('hidden');
+        document.querySelector('main').classList.remove('justify-center');
+        document.querySelector('main').classList.add('justify-start');
+        
+        const navInfo = document.getElementById('nav-user-info');
+        navInfo.classList.remove('hidden');
+        document.getElementById('navUserId').innerHTML = `<span class="text-textMuted mr-2">ID</span><span class="text-primary">${currentUser.userId}</span>`;
+        
         loadSurveys();
-      } catch (e) {
-        alert(e.message);
+      } catch (err) {
+        errDiv.textContent = err.message;
+        errDiv.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Continue';
       }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('auth-view').classList.remove('hidden');
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('nav-user-info').classList.add('hidden');
+      document.querySelector('main').classList.add('justify-center');
+      document.querySelector('main').classList.remove('justify-start');
     }
 
     async function loadSurveys() {
-      if (!user) return;
-      const res = await fetch(`${API}/v1/surveys?userId=${user.userId}`);
-      if (res.ok) {
+      if (!currentUser) return;
+      const grid = document.getElementById('surveys-grid');
+      grid.innerHTML = '<div class="col-span-full text-center text-textMuted py-12">Loading surveys...</div>';
+      
+      try {
+        const res = await fetch(`${API}/v1/surveys?userId=${currentUser.userId}`);
         const surveys = await res.json();
-        const html = surveys.map(s => `
-          <div class="survey-card">
-            <div>
-              <h3>${s.title}</h3>
-              <p>${s.status}</p>
+        
+        if (!surveys.length) {
+          grid.innerHTML = `
+            <div class="col-span-full border border-dashed border-border rounded-xl p-12 text-center flex flex-col items-center justify-center bg-surface">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-textMuted mb-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <h3 class="text-lg font-medium mb-1">No surveys yet</h3>
+              <p class="text-textMuted mb-4 text-sm">Create your first survey to start collecting data.</p>
+              <button onclick="openModal()" class="btn-primary">Create Survey</button>
+            </div>`;
+          return;
+        }
+
+        grid.innerHTML = surveys.map(s => {
+          const isPrivate = s.visibility === 'private';
+          const visibilityBadge = isPrivate 
+            ? `<span class="bg-red-950/30 text-red-400 border border-red-900/50 px-2 py-0.5 rounded text-xs flex items-center gap-1"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Private</span>`
+            : `<span class="bg-blue-950/30 text-blue-400 border border-blue-900/50 px-2 py-0.5 rounded text-xs">Public</span>`;
+            
+          const url = `https://10xquery.com/survey.html?id=${s.surveyId}`;
+          
+          return `
+            <div class="glass-panel p-5 rounded-xl flex flex-col h-full hover:border-gray-700 transition-colors group">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold text-lg line-clamp-1 flex-1 pr-2" title="${s.title}">${s.title}</h3>
+                ${visibilityBadge}
+              </div>
+              <p class="text-textMuted text-sm line-clamp-2 mb-6 flex-1">${s.description || 'No description'}</p>
+              <div class="flex items-center justify-between mt-auto pt-4 border-t border-border">
+                <span class="text-xs text-textMuted font-mono bg-black px-2 py-1 rounded">ID: ${s.surveyId.substring(0,8)}...</span>
+                <button onclick="copyToClipboard('${url}')" class="text-sm text-primary hover:text-primaryHover font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copy Link
+                </button>
+              </div>
             </div>
-            <div>
-              <button class="btn" onclick="alert('Share link: https://www.10xquery.com/survey.html?id=${s.surveyId}')">Share</button>
-            </div>
-          </div>
-        `).join('');
-        document.getElementById('surveys').innerHTML = html || '<p>No surveys yet.</p>';
+          `;
+        }).join('');
+      } catch (err) {
+        grid.innerHTML = `<div class="col-span-full text-red-500 text-center py-12">Failed to load surveys.</div>`;
       }
     }
 
-    async function createSurvey() {
-      const title = prompt("Survey Title:");
-      if (!title) return;
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => showToast('Link copied to clipboard!'));
+    }
+
+    // Modal logic
+    function openModal() {
+      document.getElementById('createModal').classList.add('active');
+      document.getElementById('surveyTitle').focus();
+    }
+    
+    function closeModal() {
+      document.getElementById('createModal').classList.remove('active');
+      document.getElementById('surveyTitle').value = '';
+      document.getElementById('surveyDesc').value = '';
+      document.getElementById('allowedUsers').value = '';
+      document.getElementById('vis-public').checked = true;
+      toggleAllowedUsers();
+    }
+
+    function toggleAllowedUsers() {
+      const isPrivate = document.getElementById('vis-private').checked;
+      const group = document.getElementById('allowedUsersGroup');
+      if (isPrivate) {
+        group.classList.remove('hidden');
+      } else {
+        group.classList.add('hidden');
+      }
+    }
+
+    async function handleCreateSurvey(e) {
+      e.preventDefault();
+      const btn = document.getElementById('createBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const title = document.getElementById('surveyTitle').value;
+      const description = document.getElementById('surveyDesc').value;
+      const visibility = document.querySelector('input[name="visibility"]:checked').value;
       
-      const visibility = confirm("Make this survey Private? (Click OK for Private, Cancel for Public)") ? "private" : "public";
       let allowedUsers = [];
-      
-      if (visibility === "private") {
-        const usersStr = prompt("Enter the User IDs allowed to access this survey (comma separated):");
-        if (usersStr) {
-            allowedUsers = usersStr.split(',').map(id => id.trim()).filter(id => id);
-        }
+      if (visibility === 'private') {
+        const usersStr = document.getElementById('allowedUsers').value;
+        allowedUsers = usersStr.split(',').map(id => id.trim()).filter(id => id);
       }
 
-      await fetch(`${API}/v1/surveys`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, userId: user.userId, visibility, allowedUsers })
-      });
-      loadSurveys();
+      try {
+        const res = await fetch(`${API}/v1/surveys`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, userId: currentUser.userId, visibility, allowedUsers })
+        });
+        
+        if (!res.ok) throw new Error('Failed to create survey');
+        
+        closeModal();
+        showToast('Survey created successfully');
+        loadSurveys();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Survey';
+      }
     }
   </script>
 </body>
