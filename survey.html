@@ -273,6 +273,69 @@
     .choice-item input { width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--blue); cursor: pointer; }
     .choice-item-label { font-size: 14px; color: var(--t1); }
 
+    /* ── Self-report (entity invite) view ── */
+    #view-self-report {
+      flex: 1; display: flex; flex-direction: column;
+      min-height: calc(100vh - var(--nav-h));
+    }
+    .sr-header {
+      padding: 44px 64px 32px;
+      border-bottom: 1px solid var(--bd-2);
+      background: var(--surface-1);
+      position: relative; flex-shrink: 0;
+    }
+    .sr-header::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--violet));
+    }
+    .sr-title { font-size: 26px; font-weight: 700; letter-spacing: -.5px; color: var(--t1); margin-bottom: 8px; line-height: 1.25; }
+    .sr-desc  { font-size: 14px; color: var(--t2); line-height: 1.65; margin-bottom: 20px; }
+
+    .sr-entity-banner {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      background: var(--blue-dim); border: 1px solid var(--bd-2);
+      border-radius: var(--r-lg);
+    }
+    .sr-entity-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      background: var(--blue); display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+    }
+    .sr-entity-text { display: flex; flex-direction: column; gap: 1px; }
+    .sr-entity-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--t2); }
+    .sr-entity-name  { font-size: 15px; font-weight: 700; color: var(--t1); }
+
+    .sr-body { flex: 1; padding: 40px 64px; }
+    .sr-body-inner { max-width: 680px; }
+
+    .sr-question { margin-bottom: 36px; }
+    .sr-question:last-child { margin-bottom: 0; }
+    .sr-q-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .sr-q-num {
+      width: 24px; height: 24px; flex-shrink: 0; border-radius: 7px;
+      background: var(--blue-dim); border: 1px solid var(--bd-2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11.5px; font-weight: 700; color: var(--blue);
+    }
+    .sr-q-title { font-size: 15px; font-weight: 600; color: var(--t1); line-height: 1.4; padding-top: 2px; }
+
+    .sr-footer {
+      position: sticky; bottom: 0; z-index: 30;
+      padding: 14px 64px;
+      background: var(--surface-1); border-top: 1px solid var(--bd-2);
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px);
+    }
+    .sr-footer-meta { font-size: 13px; color: var(--t3); }
+
+    @media (max-width: 768px) {
+      .sr-header { padding: 28px 20px 24px; }
+      .sr-body    { padding: 28px 20px; }
+      .sr-footer  { padding: 12px 20px; }
+      .sr-title   { font-size: 22px; }
+    }
+
     /* Multi-slot */
     .multi-slot-group { display: flex; flex-direction: column; gap: 8px; }
     .multi-slot-item  { display: flex; align-items: flex-start; gap: 10px; }
@@ -510,11 +573,11 @@
           <circle cx="12" cy="12" r="10"/>
           <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-      </div>
+          </div>
       <h2 class="state-title" id="error-title">Survey Not Found</h2>
       <p class="state-desc" id="error-desc">The link may be broken, expired, or you may not have permission.</p>
       <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
-    </div>
+          </div>
 
   </div><!-- /centered-states -->
 
@@ -552,6 +615,41 @@
   </div><!-- /view-survey -->
 
 
+  <!-- ── Self-report view (entity invite links) ── -->
+  <div id="view-self-report" style="display:none;">
+
+    <!-- Header: survey title + entity banner -->
+    <div class="sr-header">
+      <h1 class="sr-title" id="sr-title"></h1>
+      <p class="sr-desc" id="sr-desc" style="display:none;"></p>
+      <div class="sr-entity-banner">
+        <div class="sr-entity-icon" id="sr-entity-icon">?</div>
+        <div class="sr-entity-text">
+          <span class="sr-entity-label">You are responding as</span>
+          <span class="sr-entity-name" id="sr-entity-name">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Questions -->
+    <form id="sr-form" onsubmit="event.preventDefault(); handleSelfReportSubmit(event);"
+          style="flex:1; display:flex; flex-direction:column;">
+      <div class="sr-body">
+        <div class="sr-body-inner" id="sr-questions"></div>
+      </div>
+      <div class="sr-footer">
+        <span class="sr-footer-meta" id="sr-footer-meta"></span>
+        <button type="submit" id="sr-submit-btn" class="btn btn-primary">
+          Submit Response
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+
+  </div><!-- /view-self-report -->
+
   <script>
     /* ── Theme ── */
     function applyTheme(dark) {
@@ -576,23 +674,27 @@
 
     const params     = new URLSearchParams(location.search);
     const surveyId   = params.get('id');
-    let currentUserId   = null;
-    let surveyQuestions = [];
+    const rowToken   = params.get('rowToken');  // entity invite link
+    let currentUserId    = null;
+    let surveyQuestions  = [];
     let surveyDefinition = null;
     let matrixRows       = [];
-    let answerState      = {};  // tracks current answers for skip logic evaluation
+    let answerState      = {};
+    let selfReportCtx    = null;  // { surveyId, rowKey, title, description, definition }
 
     /* ── View management ── */
     function showView(id) {
-      // Hide everything first
-      document.getElementById('centered-states').style.display = 'none';
-      document.getElementById('view-survey').style.display     = 'none';
+      document.getElementById('centered-states').style.display    = 'none';
+      document.getElementById('view-survey').style.display        = 'none';
+      document.getElementById('view-self-report').style.display   = 'none';
       ['loading','auth','success','error'].forEach(v => {
         const el = document.getElementById('view-' + v);
         if (el) el.style.display = 'none';
       });
       if (id === 'survey') {
         document.getElementById('view-survey').style.display = '';
+      } else if (id === 'self-report') {
+        document.getElementById('view-self-report').style.display = '';
       } else {
         document.getElementById('centered-states').style.display = '';
         const el = document.getElementById('view-' + id);
@@ -962,8 +1064,162 @@
       return d.innerHTML;
     }
 
-    // Boot
+    /* ────────────────────────────────────────────────
+       SELF-REPORT  (entity invite links)
+    ──────────────────────────────────────────────── */
+
+    async function loadRowSurvey(token) {
+      showView('loading');
+      try {
+        const res  = await fetch(`${API}/v1/row-survey?rowToken=${encodeURIComponent(token)}`);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          document.getElementById('error-title').textContent = 'Invalid or expired link';
+          document.getElementById('error-desc').textContent  = err.detail || 'This invite link is no longer valid. Please request a new one.';
+          showView('error');
+          return;
+        }
+        selfReportCtx    = await res.json();
+        surveyQuestions  = selfReportCtx.definition?.questions || [];
+        document.title   = `${selfReportCtx.title} — 10xQuery`;
+        renderSelfReportForm();
+        showView('self-report');
+      } catch {
+        document.getElementById('error-title').textContent = 'Connection Error';
+        document.getElementById('error-desc').textContent  = 'Unable to reach the server. Please check your connection.';
+        showView('error');
+      }
+    }
+
+    function renderSelfReportForm() {
+      const ctx  = selfReportCtx;
+      const qs   = surveyQuestions;
+      const name = ctx.rowKey;
+
+      // Header
+      document.getElementById('sr-title').textContent = ctx.title || 'Survey';
+      const descEl = document.getElementById('sr-desc');
+      if (ctx.description) { descEl.textContent = ctx.description; descEl.style.display = ''; }
+      document.getElementById('sr-entity-name').textContent  = name;
+      document.getElementById('sr-entity-icon').textContent  = (name || '?')[0].toUpperCase();
+      document.getElementById('sr-footer-meta').textContent  =
+        `${qs.length} question${qs.length !== 1 ? 's' : ''} · responding as ${name}`;
+
+      // Questions
+      let html = '';
+      qs.forEach((q, idx) => {
+        html += `<div class="sr-question" id="srq-${q.id}">
+          <div class="sr-q-head">
+            <div class="sr-q-num">${idx + 1}</div>
+            <div class="sr-q-title">${esc(q.title)}</div>
+          </div>`;
+
+        if (q.type === 'text') {
+          html += `<input type="text" id="sr-ans-${q.id}" class="field-input" placeholder="Your answer…">`;
+        } else if (q.type === 'longtext') {
+          html += `<textarea id="sr-ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…"></textarea>`;
+        } else if (q.type === 'radio') {
+          html += '<div class="choice-group">';
+          (q.options || []).forEach(opt => {
+            const s = esc(opt);
+            html += `<label class="choice-item">
+              <input type="radio" name="sr-ans-${q.id}" value="${s}"
+                onchange="answerState['${q.id}']=this.value; evaluateSkipLogic();">
+              <span class="choice-item-label">${s}</span>
+            </label>`;
+          });
+          html += '</div>';
+        } else if (q.type === 'checkbox') {
+          html += '<div class="choice-group">';
+          (q.options || []).forEach(opt => {
+            const s = esc(opt);
+            html += `<label class="choice-item">
+              <input type="checkbox" name="sr-ans-${q.id}" value="${s}"
+                onchange="answerState['${q.id}']=Array.from(document.querySelectorAll('input[name=\\'sr-ans-${q.id}\\'\\]:checked')).map(e=>e.value); evaluateSkipLogic();">
+              <span class="choice-item-label">${s}</span>
+            </label>`;
+          });
+          html += '</div>';
+        }
+
+        html += '</div>';
+      });
+      document.getElementById('sr-questions').innerHTML = html;
+
+      // Wire text inputs for skip logic
+      qs.forEach(q => {
+        if (q.type === 'text' || q.type === 'longtext') {
+          const el = document.getElementById(`sr-ans-${q.id}`);
+          if (el) el.addEventListener('input', () => {
+            answerState[q.id] = el.value;
+            evaluateSRSkipLogic();
+          });
+        }
+      });
+      evaluateSRSkipLogic();
+    }
+
+    function evaluateSRSkipLogic() {
+      surveyQuestions.forEach(q => {
+        const block = document.getElementById(`srq-${q.id}`);
+        if (block) block.style.display = _qVisible(q) ? '' : 'none';
+      });
+    }
+
+    async function handleSelfReportSubmit(e) {
+      const ctx = selfReportCtx;
+      if (!ctx) return;
+      const rowKey  = ctx.rowKey;
+      const sid     = ctx.surveyId;
+      const answers = {};
+
+      surveyQuestions.forEach(q => {
+        // Skip hidden questions
+        const block = document.getElementById(`srq-${q.id}`);
+        if (block && block.style.display === 'none') return;
+
+        let val;
+        if (q.type === 'text' || q.type === 'longtext') {
+          val = document.getElementById(`sr-ans-${q.id}`)?.value.trim() || '';
+        } else if (q.type === 'radio') {
+          val = document.querySelector(`input[name="sr-ans-${q.id}"]:checked`)?.value || '';
+        } else if (q.type === 'checkbox') {
+          val = Array.from(document.querySelectorAll(`input[name="sr-ans-${q.id}"]:checked`))
+                     .map(el => el.value);
+        }
+        // Store as matrix-format: { qId: { rowKey: value } }
+        answers[q.id] = { [rowKey]: val };
+      });
+
+      const btn = document.getElementById('sr-submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Submitting…';
+
+      try {
+        const res = await fetch(`${API}/v1/surveys/${sid}/responses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            answers,
+            rowKeys:     [rowKey],
+            responderId: rowKey,
+          }),
+        });
+        if (!res.ok) throw new Error('Server rejected the submission');
+        showView('success');
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `Submit Response <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+        alert('Submission failed: ' + err.message);
+      }
+    }
+
+    // Boot — choose path based on URL params
+    if (rowToken) {
+      loadRowSurvey(rowToken);
+    } else {
     loadSurvey();
+    }
   </script>
 </body>
 </html>

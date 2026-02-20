@@ -354,6 +354,63 @@
       font-size: 11px; color: rgba(240,246,255,.2); line-height: 1.7;
     }
 
+    /* ── Send to Entities panel ── */
+    .ste-panel { background: var(--surface-1); border: 1px solid var(--bd-2); border-radius: var(--r-lg); overflow: hidden; }
+
+    .ste-head {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(46,125,82,.1), rgba(109,78,224,.07));
+      border-bottom: 1px solid var(--bd-2);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .ste-head-icon {
+      width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
+      background: var(--blue-dim); border: 1px solid var(--bd-2);
+      display: flex; align-items: center; justify-content: center; color: var(--blue);
+    }
+    .ste-head-text { flex: 1; min-width: 0; }
+    .ste-head-title { font-size: 13px; font-weight: 700; color: var(--t1); }
+    .ste-head-sub   { font-size: 11px; color: var(--t2); margin-top: 2px; }
+
+    .ste-progress {
+      font-size: 11px; font-weight: 700; color: var(--green);
+      background: var(--green-dim); border: 1px solid var(--bd-2);
+      padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+    }
+
+    .ste-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-bottom: 1px solid var(--bd);
+      transition: background var(--t-fast) var(--ease);
+    }
+    .ste-row:last-child { border-bottom: none; }
+    .ste-row:hover { background: var(--surface-2); }
+
+    .ste-status {
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 10px;
+    }
+    .ste-status.done    { background: var(--green-dim); color: var(--green); }
+    .ste-status.pending { background: var(--surface-3); color: var(--t3); border: 1px solid var(--bd-2); }
+
+    .ste-row-info { flex: 1; min-width: 0; }
+    .ste-row-name { font-size: 13px; font-weight: 500; color: var(--t1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ste-row-meta { font-size: 10.5px; color: var(--t3); margin-top: 1px; }
+
+    .ste-copy-btn {
+      width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--bd-2);
+      background: transparent; color: var(--t2); cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .ste-copy-btn:hover  { background: var(--blue-dim); color: var(--blue); }
+    .ste-copy-btn.copied { background: var(--green-dim); color: var(--green); }
+
+    .ste-footer {
+      padding: 10px 16px; border-top: 1px solid var(--bd);
+      display: flex; gap: 8px;
+    }
+
     /* ── Skip logic UI (editor) ── */
     .q-logic-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--bd); }
     .q-logic-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -377,6 +434,116 @@
       transition: border-color var(--t-fast) var(--ease);
     }
     .csv-textarea:focus { border-color: var(--blue); }
+
+    /* ══════════════════════════════════════════
+       SCORING & LEADERBOARD
+    ══════════════════════════════════════════ */
+
+    /* Inline points input per option */
+    .score-pts-wrap { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .score-pts-input {
+      width: 52px; background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 4px 6px; border-radius: 6px;
+      font-size: 12px; text-align: center; outline: none;
+      transition: border-color var(--t-fast) var(--ease);
+      -moz-appearance: textfield;
+    }
+    .score-pts-input::-webkit-outer-spin-button,
+    .score-pts-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .score-pts-input:focus { border-color: var(--blue); }
+    .score-pts-label { font-size: 11px; color: var(--t3); white-space: nowrap; }
+
+    .q-score-tag {
+      font-size: 10px; font-weight: 600; color: var(--blue);
+      background: var(--blue-dim); border: 1px solid var(--bd-2);
+      padding: 2px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Scoring sidebar */
+    .passing-score-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+    .passing-score-input {
+      width: 60px; background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 5px 8px; border-radius: 6px;
+      font-size: 13px; font-weight: 600; text-align: center; outline: none;
+      -moz-appearance: textfield;
+      transition: border-color var(--t-fast) var(--ease);
+    }
+    .passing-score-input::-webkit-outer-spin-button,
+    .passing-score-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .passing-score-input:focus { border-color: var(--blue); }
+
+    /* Leaderboard page */
+    .lb-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+    @media (max-width: 900px) { .lb-summary { grid-template-columns: repeat(2,1fr); } }
+
+    .lb-wrap { background: var(--surface-1); border: 1px solid var(--bd-2); border-radius: var(--r-lg); overflow: hidden; }
+
+    .lb-header-row {
+      display: grid; grid-template-columns: 52px 1fr 220px 100px 120px 32px;
+      padding: 10px 20px; gap: 14px; align-items: center;
+      background: var(--surface-2); border-bottom: 2px solid var(--bd-2);
+      font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--t2);
+    }
+    .lb-row {
+      display: grid; grid-template-columns: 52px 1fr 220px 100px 120px 32px;
+      padding: 0 20px; gap: 14px; align-items: center;
+      border-bottom: 1px solid var(--bd);
+      transition: background var(--t-fast) var(--ease); cursor: pointer;
+    }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover, .lb-row.expanded { background: var(--surface-2); }
+
+    .lb-rank { font-size: 16px; font-weight: 800; color: var(--t3); text-align: center; }
+    .lb-rank.gold   { color: #F59E0B; }
+    .lb-rank.silver { color: #9CA3AF; }
+    .lb-rank.bronze { color: #B45309; }
+
+    .lb-entity { padding: 15px 0; }
+    .lb-entity-name { font-size: 14px; font-weight: 600; color: var(--t1); }
+    .lb-entity-sub  { font-size: 11px; color: var(--t3); margin-top: 2px; }
+
+    .lb-bar-col { display: flex; flex-direction: column; gap: 5px; }
+    .lb-bar-track { height: 7px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+    .lb-bar { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.34,1.2,.64,1); }
+    .lb-bar.green  { background: var(--green); }
+    .lb-bar.amber  { background: var(--amber); }
+    .lb-bar.red    { background: var(--red); }
+    .lb-bar-label  { font-size: 11px; color: var(--t3); }
+
+    .lb-score-val { font-size: 18px; font-weight: 700; letter-spacing: -.4px; color: var(--t1); }
+    .lb-score-den { font-size: 12px; color: var(--t3); font-weight: 400; }
+
+    .lb-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px; border-radius: 20px;
+      font-size: 11.5px; font-weight: 600; white-space: nowrap;
+    }
+    .lb-badge.pass { background: var(--green-dim); color: var(--green); border: 1px solid var(--bd-2); }
+    .lb-badge.fail { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--bd-2); }
+    .lb-badge.none { background: var(--surface-3); color: var(--t3);    border: 1px solid var(--bd-2); }
+
+    .lb-chevron { transition: transform var(--t-mid) var(--ease); color: var(--t3); }
+    .lb-row.expanded .lb-chevron { transform: rotate(90deg); }
+
+    .lb-breakdown {
+      display: none; padding: 14px 20px 18px 86px;
+      border-bottom: 1px solid var(--bd); background: var(--bg);
+      animation: fadeUp .15s var(--ease) both;
+    }
+    .lb-breakdown.open { display: block; }
+
+    .lb-bd-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 0; border-bottom: 1px solid var(--bd); font-size: 13px;
+    }
+    .lb-bd-row:last-child { border-bottom: none; }
+    .lb-bd-q    { flex: 1; color: var(--t2); line-height: 1.4; }
+    .lb-bd-ans  { color: var(--t1); font-weight: 500; min-width: 120px; }
+    .lb-bd-pts  { font-size: 12.5px; font-weight: 700; min-width: 60px; text-align: right; white-space: nowrap; }
+    .lb-bd-pts.pos  { color: var(--green); }
+    .lb-bd-pts.zero { color: var(--t3); }
+    .lb-bd-bar-wrap { width: 70px; height: 5px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
+    .lb-bd-bar-fill { height: 100%; background: var(--blue); border-radius: 3px; }
 
     /* right form panel */
     .auth-panel-right {
@@ -1356,14 +1523,14 @@
         </div>
         <span class="brand-name">10xQuery</span>
       </div>
-
+      
       <h2 class="auth-headline">
         Survey 100 suppliers.<br>In one form.
       </h2>
       <p class="auth-tagline">
         Collect structured data from multiple entities in a single submission. Built for aggregators, procurement teams, and anyone who needs consistent answers at scale.
       </p>
-    </div>
+          </div>
 
     <!-- Product preview card -->
     <div class="product-preview">
@@ -1520,7 +1687,7 @@
           <rect x="1" y="9" width="6" height="6" rx="1" fill="white" opacity=".55"/>
           <rect x="9" y="9" width="6" height="6" rx="1" fill="white" opacity=".28"/>
         </svg>
-      </div>
+        </div>
       <span class="logo-wordmark">10xQuery</span>
       <span class="logo-pill">Enterprise</span>
     </div>
@@ -1715,6 +1882,15 @@
           <p id="editorId" style="font-size:11.5px;color:var(--t3);font-family:monospace;"></p>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-ghost" id="lbHeaderBtn" onclick="openLeaderboard()" style="display:none;" title="View leaderboard">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+              <circle cx="18" cy="8" r="2" fill="currentColor" stroke="none"/>
+              <circle cx="12" cy="2" r="2" fill="currentColor" stroke="none"/>
+              <circle cx="6" cy="12" r="2" fill="currentColor" stroke="none"/>
+            </svg>
+            Leaderboard
+          </button>
           <button class="btn btn-ghost" onclick="openCollabModal()" id="collabHeaderBtn" title="Manage collaborators">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -1839,6 +2015,40 @@
       </div>
     </div>
 
+          <!-- Scoring panel — only meaningful when matrix mode is active -->
+          <div class="e-panel" id="scoring-sidebar-panel">
+            <div class="e-panel-head" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>Response Scoring</span>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <span style="font-size:11px;color:var(--t2);" id="scoringToggleLabel">Off</span>
+                <div class="toggle-track" id="scoringToggleTrack" onclick="toggleScoring()" style="
+                  width:32px;height:18px;border-radius:20px;background:var(--surface-3);
+                  border:1px solid var(--bd-2);position:relative;cursor:pointer;
+                  transition:background var(--t-mid) var(--ease);">
+                  <div id="scoringToggleThumb" style="
+                    position:absolute;top:2px;left:2px;width:12px;height:12px;
+                    border-radius:50%;background:var(--t3);
+                    transition:transform var(--t-mid) var(--ease),background var(--t-mid) var(--ease);">
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div class="e-panel-body" id="scoring-config-body" style="display:none;gap:10px;">
+              <p style="font-size:11.5px;color:var(--t2);line-height:1.55;">
+                Assign points to each answer option. Entities are automatically ranked on the Leaderboard.
+              </p>
+              <div class="passing-score-row">
+                <span style="color:var(--t2);flex:1;">Passing score</span>
+                <input type="number" id="passingScoreInput" class="passing-score-input"
+                  value="70" min="0" onchange="editorScoring.passingScore=+this.value">
+                <span style="color:var(--t3);font-size:12px;">/ <span id="maxScoreDisplay">0</span> pts</span>
+              </div>
+              <p style="font-size:11px;color:var(--t3);line-height:1.5;border-top:1px solid var(--bd);padding-top:8px;">
+                Point values appear on each Single/Multiple Choice option below. Text questions are not scored.
+              </p>
+            </div>
+          </div>
+
           <div class="e-panel">
             <div class="e-panel-head">Share</div>
             <div class="e-panel-body">
@@ -1879,6 +2089,42 @@
           </div>
         </div>
       </div>
+    <!-- ── Send to Entities panel (only visible for matrix surveys) ── -->
+    <div id="ste-section" style="display:none; margin-top:28px;">
+      <div class="section-bar" style="margin-bottom:14px;">
+        <span class="section-bar-title">Send to Entities</span>
+        <span class="section-bar-count" id="ste-count">0 / 0</span>
+      </div>
+      <div class="ste-panel">
+        <div class="ste-head">
+          <div class="ste-head-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4 20-7z"/>
+            </svg>
+          </div>
+          <div class="ste-head-text">
+            <div class="ste-head-title">Invite each entity to self-report</div>
+            <div class="ste-head-sub">Each link is signed and unique to one row. Recipients fill in only their column.</div>
+          </div>
+          <span class="ste-progress" id="ste-progress" style="display:none;">0 / 0 done</span>
+        </div>
+        <!-- Row list injected here -->
+        <div id="ste-rows"></div>
+        <div class="ste-footer">
+          <button class="btn btn-ghost btn-sm" onclick="copyAllRowLinks()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy All Links
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="refreshRowLinks()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh Status
+          </button>
+        </div>
+      </div>
+    </div>
     </div><!-- /page-editor -->
 
 
@@ -1927,6 +2173,54 @@
         </table>
       </div>
     </div><!-- /page-results -->
+
+
+    <!-- ── PAGE: LEADERBOARD ── -->
+    <div id="page-leaderboard" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="page-header-text">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <button class="btn btn-ghost btn-sm" onclick="closeLeaderboard()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back
+            </button>
+            <span class="topbar-sep">/</span>
+            <h1 style="font-size:18px;margin-bottom:0;" id="lbTitle">Leaderboard</h1>
+          </div>
+          <p style="font-size:13px;color:var(--t2);" id="lbSubtitle">Loading…</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;align-self:flex-start;margin-top:4px;">
+          <button class="btn btn-ghost" id="lbExportBtn" onclick="exportLeaderboard()" style="display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary stat cards -->
+      <div class="lb-summary" id="lb-summary"></div>
+
+      <!-- Leaderboard table -->
+      <div class="lb-wrap" id="lb-table">
+        <div class="lb-header-row">
+          <span>Rank</span>
+          <span>Entity</span>
+          <span>Score</span>
+          <span>Points</span>
+          <span>Status</span>
+          <span></span>
+        </div>
+        <div id="lb-rows">
+          <!-- rows injected -->
+        </div>
+      </div>
+    </div><!-- /page-leaderboard -->
 
 
     <!-- ── PAGE: ANALYTICS OVERVIEW ── -->
@@ -2262,8 +2556,10 @@
   let editorQs            = [];
   let allSurveys          = [];
   // Row labels state
-  let editorRowLabels     = [];
+  let editorRowLabels       = [];
   let editorAllowCustomRows = false;
+  // Scoring state
+  let editorScoring = { enabled: false, passingScore: 70 };
   // Results state
   let currentDefinition   = null;
   let currentResponses    = [];
@@ -2289,12 +2585,12 @@
   }
 
   function setPage(id) {
-    ['surveys','editor','results','analytics','survey-analytics','settings'].forEach(p => {
+    ['surveys','editor','results','leaderboard','analytics','survey-analytics','settings'].forEach(p => {
       const el = document.getElementById('page-' + p);
       if (el) el.style.display = p === id ? '' : 'none';
     });
     // Reset nav active to surveys unless caller overrides
-    if (['surveys','editor','results'].includes(id)) setNavActive('surveys');
+    if (['surveys','editor','results','leaderboard'].includes(id)) setNavActive('surveys');
     // topbar
     const title = {
       surveys: 'Surveys', editor: 'Survey Editor', results: 'Results',
@@ -2623,15 +2919,18 @@
     try {
       const res  = await fetch(`${API}/v1/surveys/${id}/definition?userId=${currentUser.userId}`);
         const data = await res.json();
-      editorQs             = data.questions || [];
-      editorRowLabels      = data.rowLabels || [];
+      editorQs              = data.questions || [];
+      editorRowLabels       = data.rowLabels || [];
       editorAllowCustomRows = data.allowCustomRows || false;
+      editorScoring         = data.scoring || { enabled: false, passingScore: 70 };
       const cb = document.getElementById('allowCustomRowsCb');
       if (cb) cb.checked = editorAllowCustomRows;
       renderRowLabels();
+      _applyScoringToggleUI();
       if (!editorQs.length) editorQs = [{ id: 'q1', type: 'text', title: 'Your first question', slots: 1 }];
         renderQuestions();
       loadCollaborators(id);
+      loadRowLinks();
     } catch {
       list.innerHTML = `<div style="color:var(--red);text-align:center;padding:40px;">Failed to load questions.</div>`;
       }
@@ -2679,6 +2978,11 @@
             </div>
         ${slots > 1 ? `<div class="q-slots-preview">${previewRows}</div>` : ''}` : '';
 
+      // Max points for this question (for the header tag)
+      const qMaxPts = (isChoice && editorScoring.enabled)
+        ? Math.max(0, ...Object.values(q.scoring || {}).map(Number))
+        : 0;
+
       const optionsHtml = isChoice ? `
         <div class="q-options">
           ${(q.options||['Option 1','Option 2']).map((opt,oi)=>`
@@ -2691,6 +2995,13 @@
                 placeholder="Option text"
                 onchange="updateOption(${idx},${oi},this.value)"
               >
+              ${editorScoring.enabled ? `
+                <div class="score-pts-wrap" title="Points awarded for this answer">
+                  <input type="number" class="score-pts-input" min="0" max="9999"
+                    value="${q.scoring?.[opt] ?? 0}"
+                    onchange="updateScoringPts(${idx},'${esc(opt).replace(/'/g,'\\u0027')}',+this.value)">
+                  <span class="score-pts-label">pts</span>
+                </div>` : ''}
               <button class="q-opt-del" onclick="removeOption(${idx},${oi})" title="Remove option">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -2774,6 +3085,8 @@
               <option value="radio"    ${q.type==='radio'    ?'selected':''}>Single Choice</option>
               <option value="checkbox" ${q.type==='checkbox' ?'selected':''}>Multiple Choice</option>
             </select>
+            ${editorScoring.enabled && isChoice && qMaxPts > 0 ? `<span class="q-score-tag">max ${qMaxPts} pts</span>` : ''}
+            ${editorScoring.enabled && isChoice && qMaxPts === 0 ? `<span class="q-score-tag" style="color:var(--t3);background:var(--surface-3);">unscored</span>` : ''}
             <button class="q-delete-btn" onclick="removeQuestion(${idx})" title="Delete question">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"/>
@@ -2853,10 +3166,11 @@
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ userId: currentUser.userId, definition: { questions: editorQs, rowLabels: editorRowLabels, allowCustomRows: editorAllowCustomRows } }),
+        body: JSON.stringify({ userId: currentUser.userId, definition: { questions: editorQs, rowLabels: editorRowLabels, allowCustomRows: editorAllowCustomRows, scoring: editorScoring } }),
       });
       if (!res.ok) throw new Error('Save failed');
       showToast('Questions saved');
+      loadRowLinks(); // refresh completion status after save
     } catch {
       showToast('Failed to save questions', 'err');
       } finally {
@@ -2986,14 +3300,14 @@
     }
     renderRowLabels();
     if (editorRowLabels.length) {
-      // Scroll to the card so they notice it expanded
       document.getElementById('matrixSetupCard')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      // Focus the first row label input
       setTimeout(() => {
         const first = document.querySelector('#rowLabelsList input[type=text]');
         if (first) { first.select(); first.focus(); }
       }, 150);
     }
+    // Show/hide the Send to Entities panel
+    loadRowLinks();
   }
 
   /* ─────────────────────────────────────────────────
@@ -3290,7 +3604,7 @@
       ]);
       const defData   = await defRes.json();
       const responses = await rspRes.json();
-      const questions = defData.questions || [];
+        const questions = defData.questions || [];
       const total     = responses.length;
       const recent    = responses.filter(r => Date.now() - new Date(r.ts).getTime() < 7*864e5).length;
       const today     = responses.filter(r => new Date(r.ts).toDateString() === new Date().toDateString()).length;
@@ -3628,6 +3942,117 @@
         ${input}
       </div>`;
         }).join('');
+  }
+
+  /* ─────────────────────────────────────────────────
+     SEND TO ENTITIES  (row-invite links)
+  ───────────────────────────────────────────────── */
+  let _rowTokenCache = null;   // cached token data for current survey
+
+  async function loadRowLinks() {
+    if (!currentSrvId || !currentUser) return;
+    const section = document.getElementById('ste-section');
+
+    // Only show for matrix surveys
+    const hasRows = editorRowLabels.length > 0;
+    if (!hasRows) { section.style.display = 'none'; return; }
+    section.style.display = '';
+
+    _renderRowLinksSkeleton();
+    try {
+      const res  = await fetch(`${API}/v1/surveys/${currentSrvId}/row-tokens?userId=${currentUser.userId}`);
+      const data = await res.json();
+      _rowTokenCache = data;
+      _renderRowLinksData(data);
+    } catch {
+      document.getElementById('ste-rows').innerHTML =
+        `<div style="padding:16px;font-size:13px;color:var(--red);">Failed to load row links.</div>`;
+    }
+  }
+
+  function _renderRowLinksSkeleton() {
+    const rows = editorRowLabels.map(() => `
+      <div class="ste-row">
+        <div class="ste-status pending" style="opacity:.4;"></div>
+        <div class="ste-row-info">
+          <div class="skeleton" style="height:12px;width:55%;margin-bottom:5px;"></div>
+          <div class="skeleton" style="height:10px;width:35%;"></div>
+        </div>
+        <div class="ste-copy-btn" style="opacity:.3;pointer-events:none;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </div>
+      </div>`).join('');
+    document.getElementById('ste-rows').innerHTML = rows;
+  }
+
+  function _renderRowLinksData(data) {
+    const rows     = data.rows || [];
+    const total    = data.totalRows || rows.length;
+    const complete = data.completedRows || 0;
+
+    // Update progress pill and count
+    const pct = total ? Math.round((complete / total) * 100) : 0;
+    const prog = document.getElementById('ste-progress');
+    prog.style.display = '';
+    prog.textContent = `${complete} / ${total} done`;
+    prog.style.background = complete === total && total > 0 ? 'var(--green-dim)' : 'var(--blue-dim)';
+    prog.style.color       = complete === total && total > 0 ? 'var(--green)' : 'var(--blue)';
+    document.getElementById('ste-count').textContent = `${complete} / ${total}`;
+
+    document.getElementById('ste-rows').innerHTML = rows.map((row, i) => {
+      const done  = row.responseCount > 0;
+      const ts    = row.lastResponse
+        ? new Date(row.lastResponse).toLocaleDateString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+        : null;
+      return `
+        <div class="ste-row">
+          <div class="ste-status ${done ? 'done' : 'pending'}">
+            ${done
+              ? `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
+              : `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>`}
+          </div>
+          <div class="ste-row-info">
+            <div class="ste-row-name" title="${esc(row.rowKey)}">${esc(row.rowKey)}</div>
+            <div class="ste-row-meta">
+              ${done
+                ? `<span style="color:var(--green);">✓ ${row.responseCount} response${row.responseCount!==1?'s':''}</span>${ts ? ` · last ${ts}` : ''}`
+                : `Awaiting response`}
+            </div>
+          </div>
+          <button class="ste-copy-btn" id="ste-btn-${i}"
+            onclick="copyRowLink('${esc(row.url)}', 'ste-btn-${i}')"
+            title="Copy invite link for ${esc(row.rowKey)}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>`;
+    }).join('') || `<div style="padding:16px;font-size:13px;color:var(--t2);">No row labels defined yet. Add them in the Matrix Setup card above.</div>`;
+  }
+
+  function copyRowLink(url, btnId) {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.classList.add('copied');
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+      }, 2000);
+      showToast(`Link copied for ${url.includes('rowToken') ? 'entity' : 'survey'}`);
+    });
+  }
+
+  function copyAllRowLinks() {
+    if (!_rowTokenCache?.rows?.length) { showToast('Generate row links first', 'err'); return; }
+    const text = _rowTokenCache.rows
+      .map(r => `${r.rowKey}:\n${r.url}`)
+      .join('\n\n');
+    navigator.clipboard.writeText(text).then(() => showToast(`Copied ${_rowTokenCache.rows.length} links`));
+  }
+
+  async function refreshRowLinks() {
+    _rowTokenCache = null;
+    await loadRowLinks();
   }
 
   /* ─────────────────────────────────────────────────
