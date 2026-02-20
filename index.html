@@ -3141,6 +3141,31 @@
     renderQuestions();
   }
 
+  /* ── Response Scoring toggle ── */
+  function toggleScoring() {
+    editorScoring.enabled = !editorScoring.enabled;
+    _applyScoringToggleUI();
+    renderQuestions(); // re-render to show/hide point inputs per option
+  }
+
+  function _applyScoringToggleUI() {
+    const on    = editorScoring.enabled;
+    const label = document.getElementById('scoringToggleLabel');
+    const track = document.getElementById('scoringToggleTrack');
+    const thumb = document.getElementById('scoringToggleThumb');
+    const body  = document.getElementById('scoring-config-body');
+    if (label) label.textContent = on ? 'On' : 'Off';
+    if (track) track.style.background = on ? 'var(--blue)' : 'var(--surface-3)';
+    if (thumb) {
+      thumb.style.transform  = on ? 'translateX(14px)' : 'translateX(0)';
+      thumb.style.background = on ? '#fff' : 'var(--t3)';
+    }
+    if (body)  body.style.display = on ? 'flex' : 'none';
+    if (on && document.getElementById('passingScoreInput')) {
+      document.getElementById('passingScoreInput').value = editorScoring.passingScore ?? 70;
+    }
+  }
+
   /* ── Skip Logic (editor) ── */
   function addLogicCond(idx) {
     if (!editorQs[idx].conditions) editorQs[idx].conditions = [];
