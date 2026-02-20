@@ -283,7 +283,8 @@ def _rotate_session(refresh_token: str, response: Response) -> Dict[str, Any]:
     ttl = _ttl_epoch(REFRESH_TOKEN_TTL_DAYS)
     sessions_table.update_item(
         Key={"sessionId": session_id},
-        UpdateExpression="SET refreshHash=:rh, lastUsedAt=:lu, ttl=:ttl",
+        UpdateExpression="SET refreshHash=:rh, lastUsedAt=:lu, #ttl=:ttl",
+        ExpressionAttributeNames={"#ttl": "ttl"},   # ttl is a DynamoDB reserved keyword
         ExpressionAttributeValues={":rh": new_hash, ":lu": now, ":ttl": ttl},
     )
     _set_refresh_cookie(response, new_token, REFRESH_TOKEN_TTL_DAYS)
