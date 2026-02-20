@@ -155,7 +155,9 @@
       document.getElementById(viewId).classList.remove('hidden');
     }
 
-    async function loadSurvey(userId = null) {
+    let surveyQuestions = [];
+
+    async function load(userId = null) {
       if (!surveyId) {
         showView('error-view');
         return;
@@ -170,7 +172,6 @@
         if (res.status === 403) {
           showView('auth-view');
           if (userId) {
-            // They tried to auth and failed
             alert("Access denied. That ID is not allowed to view this survey.");
             document.getElementById('viewerId').value = '';
           }
@@ -189,7 +190,16 @@
           } else {
             descEl.classList.add('hidden');
           }
-          
+
+          // Fetch questions
+          const defRes = await fetch(`${API}/v1/surveys/${surveyId}/definition${userId ? `?userId=${userId}` : ''}`);
+          if (defRes.ok) {
+            const defData = await defRes.json();
+            surveyQuestions = defData.questions || [];
+            if (!surveyQuestions.length) surveyQuestions = [{ id: 'q1', type: 'longtext', title: 'Your thoughts:' }];
+            renderQuestions();
+          }
+
           showView('survey-view');
         } else {
           showView('error-view');
@@ -199,6 +209,57 @@
         document.getElementById('error-desc').textContent = "Failed to connect to the server.";
         showView('error-view');
       }
+    }
+
+    function renderQuestions() {
+      const form = document.getElementById('survey-form');
+      
+      let html = '';
+      surveyQuestions.forEach((q, idx) => {
+        html += `<div class="mb-8" id="q-container-${q.id}">
+          <label class="block text-base font-medium text-textMain mb-4">
+            <span class="text-textMuted font-mono mr-2">${idx + 1}.</span>${q.title}
+          </label>`;
+
+        if (q.type === 'text') {
+          html += `<input type="text" id="ans-${q.id}" class="input-field p-4 text-base" required>`;
+        } else if (q.type === 'longtext') {
+          html += `<textarea id="ans-${q.id}" class="input-field resize-y min-h-[120px] p-4 text-base leading-relaxed" required></textarea>`;
+        } else if (q.type === 'radio') {
+          html += `<div class="space-y-3">`;
+          (q.options || []).forEach((opt, oIdx) => {
+            html += `
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="radio" name="ans-${q.id}" value="${opt}" class="w-5 h-5 text-primary bg-black border-border focus:ring-primary focus:ring-2" required>
+                <span class="text-textMain group-hover:text-white transition-colors">${opt}</span>
+              </label>`;
+          });
+          html += `</div>`;
+        } else if (q.type === 'checkbox') {
+          html += `<div class="space-y-3">`;
+          (q.options || []).forEach((opt, oIdx) => {
+            html += `
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" name="ans-${q.id}" value="${opt}" class="w-5 h-5 text-primary bg-black border-border rounded focus:ring-primary focus:ring-2">
+                <span class="text-textMain group-hover:text-white transition-colors">${opt}</span>
+              </label>`;
+          });
+          html += `</div>`;
+        }
+        
+        html += `</div>`;
+      });
+
+      html += `
+        <div class="flex justify-end pt-4 border-t border-border">
+          <button type="submit" id="submitBtn" class="btn-primary">
+            Submit Response
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </div>
+      `;
+      
+      form.innerHTML = html;
     }
 
     function handleAuth(e) {
@@ -218,15 +279,28 @@
 
     async function handleSubmit(e) {
       e.preventDefault();
-      const answer = document.getElementById('answer').value.trim();
-      if (!answer) return;
+      
+      const answers = {};
+      
+      // Collect answers
+      for (const q of surveyQuestions) {
+        if (q.type === 'text' || q.type === 'longtext') {
+          answers[q.id] = document.getElementById(`ans-${q.id}`).value.trim();
+        } else if (q.type === 'radio') {
+          const checked = document.querySelector(`input[name="ans-${q.id}"]:checked`);
+          if (checked) answers[q.id] = checked.value;
+        } else if (q.type === 'checkbox') {
+          const checked = document.querySelectorAll(`input[name="ans-${q.id}"]:checked`);
+          answers[q.id] = Array.from(checked).map(el => el.value);
+        }
+      }
       
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...`;
       
       try {
-        const payload = { answers: { q1: answer } };
+        const payload = { answers: answers };
         if (currentUserId) payload.responderId = currentUserId;
         
         const res = await fetch(`${API}/v1/surveys/${surveyId}/responses`, {

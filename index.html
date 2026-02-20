@@ -140,6 +140,56 @@
       </div>
     </div>
 
+    <!-- Survey Editor View -->
+    <div id="editor-view" class="w-full hidden mt-8">
+      <div class="flex items-center gap-4 mb-8">
+        <button onclick="closeEditor()" class="text-textMuted hover:text-textMain transition-colors">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <h2 class="text-2xl font-bold tracking-tight" id="editorTitle">Edit Survey</h2>
+        <div class="ml-auto flex gap-3">
+          <button onclick="viewResults()" class="btn-secondary">View Results</button>
+          <button onclick="saveDefinition()" class="btn-primary" id="saveDefBtn">Save Questions</button>
+        </div>
+      </div>
+
+      <div class="glass-panel p-8 rounded-xl shadow-2xl">
+        <div id="questions-list" class="space-y-6">
+          <!-- Questions go here -->
+        </div>
+        <button onclick="addQuestion()" class="mt-8 btn-secondary w-full py-4 border-dashed border-2 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Question
+        </button>
+      </div>
+    </div>
+
+    <!-- Results View -->
+    <div id="results-view" class="w-full hidden mt-8">
+      <div class="flex items-center gap-4 mb-8">
+        <button onclick="closeResults()" class="text-textMuted hover:text-textMain transition-colors">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
+        <h2 class="text-2xl font-bold tracking-tight" id="resultsTitle">Survey Results</h2>
+        <div class="ml-auto text-sm text-textMuted" id="resultsCount">0 responses</div>
+      </div>
+
+      <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse" id="results-table">
+            <thead>
+              <tr id="results-thead" class="border-b border-border bg-black/40">
+                <!-- Headers injected -->
+              </tr>
+            </thead>
+            <tbody id="results-tbody" class="divide-y divide-border">
+                <!-- Rows injected -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Create Survey Modal -->
@@ -187,12 +237,21 @@
   <script>
     const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
     let currentUser = null;
+    let currentSurveyId = null;
+    let editorQuestions = [];
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function switchView(viewId) {
+      ['auth-view', 'dashboard-view', 'editor-view', 'results-view'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(viewId).classList.remove('hidden');
     }
 
     async function handleLogin(e) {
@@ -222,8 +281,7 @@
         if (!res.ok) throw new Error(data.detail || 'Authentication failed');
         
         currentUser = data.user;
-        document.getElementById('auth-view').classList.add('hidden');
-        document.getElementById('dashboard-view').classList.remove('hidden');
+        switchView('dashboard-view');
         document.querySelector('main').classList.remove('justify-center');
         document.querySelector('main').classList.add('justify-start');
         
@@ -243,8 +301,7 @@
 
     function logout() {
       currentUser = null;
-      document.getElementById('auth-view').classList.remove('hidden');
-      document.getElementById('dashboard-view').classList.add('hidden');
+      switchView('auth-view');
       document.getElementById('nav-user-info').classList.add('hidden');
       document.querySelector('main').classList.add('justify-center');
       document.querySelector('main').classList.remove('justify-start');
@@ -279,7 +336,7 @@
           const url = `https://10xquery.com/survey.html?id=${s.surveyId}`;
           
           return `
-            <div class="glass-panel p-5 rounded-xl flex flex-col h-full hover:border-gray-700 transition-colors group">
+            <div class="glass-panel p-5 rounded-xl flex flex-col h-full hover:border-gray-700 transition-colors group cursor-pointer" onclick="openEditor('${s.surveyId}', '${s.title.replace(/'/g, "\\\\'")}')">
               <div class="flex justify-between items-start mb-3">
                 <h3 class="font-semibold text-lg line-clamp-1 flex-1 pr-2" title="${s.title}">${s.title}</h3>
                 ${visibilityBadge}
@@ -287,7 +344,7 @@
               <p class="text-textMuted text-sm line-clamp-2 mb-6 flex-1">${s.description || 'No description'}</p>
               <div class="flex items-center justify-between mt-auto pt-4 border-t border-border">
                 <span class="text-xs text-textMuted font-mono bg-black px-2 py-1 rounded">ID: ${s.surveyId.substring(0,8)}...</span>
-                <button onclick="copyToClipboard('${url}')" class="text-sm text-primary hover:text-primaryHover font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="event.stopPropagation(); copyToClipboard('${url}')" class="text-sm text-primary hover:text-primaryHover font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                   Copy Link
                 </button>
@@ -329,7 +386,194 @@
       }
     }
 
-    async function handleCreateSurvey(e) {
+    // Editor Logic
+    async function openEditor(id, title) {
+      currentSurveyId = id;
+      document.getElementById('editorTitle').textContent = title;
+      switchView('editor-view');
+      document.getElementById('questions-list').innerHTML = '<div class="text-center text-textMuted py-8">Loading questions...</div>';
+      
+      try {
+        const res = await fetch(`${API}/v1/surveys/${id}/definition?userId=${currentUser.userId}`);
+        const data = await res.json();
+        editorQuestions = data.questions || [];
+        if (!editorQuestions.length) {
+            // Add a default text question if empty
+            editorQuestions = [{ id: 'q1', type: 'text', title: 'Your answer' }];
+        }
+        renderQuestions();
+      } catch (e) {
+        document.getElementById('questions-list').innerHTML = '<div class="text-red-500 text-center py-8">Failed to load questions.</div>';
+      }
+    }
+
+    function closeEditor() {
+      currentSurveyId = null;
+      editorQuestions = [];
+      switchView('dashboard-view');
+      loadSurveys();
+    }
+
+    function renderQuestions() {
+      const list = document.getElementById('questions-list');
+      list.innerHTML = editorQuestions.map((q, idx) => `
+        <div class="p-6 border border-border bg-black/40 rounded-lg relative group">
+          <div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+            <button onclick="removeQuestion(${idx})" class="text-red-400 hover:text-red-300" title="Remove question">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+          
+          <div class="flex items-center gap-4 mb-4">
+            <span class="text-textMuted font-mono text-sm">${idx + 1}.</span>
+            <input type="text" value="${q.title}" onchange="updateQuestion(${idx}, 'title', this.value)" class="input-field bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:bg-black !px-2 !py-1 flex-1 font-medium" placeholder="Question text">
+            
+            <select onchange="updateQuestion(${idx}, 'type', this.value)" class="input-field w-auto !py-1 bg-black">
+              <option value="text" ${q.type === 'text' ? 'selected' : ''}>Short Text</option>
+              <option value="longtext" ${q.type === 'longtext' ? 'selected' : ''}>Long Text</option>
+              <option value="radio" ${q.type === 'radio' ? 'selected' : ''}>Single Choice</option>
+              <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>Multiple Choice</option>
+            </select>
+          </div>
+
+          ${(q.type === 'radio' || q.type === 'checkbox') ? `
+            <div class="ml-8 space-y-2 mt-4">
+              ${(q.options || ['Option 1']).map((opt, oIdx) => `
+                <div class="flex items-center gap-3">
+                  <div class="w-4 h-4 rounded-sm border border-border flex-shrink-0 ${q.type === 'radio' ? 'rounded-full' : ''}"></div>
+                  <input type="text" value="${opt}" onchange="updateOption(${idx}, ${oIdx}, this.value)" class="input-field bg-transparent !py-1 focus:bg-black flex-1 text-sm" placeholder="Option text">
+                  <button onclick="removeOption(${idx}, ${oIdx})" class="text-textMuted hover:text-red-400 p-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                </div>
+              `).join('')}
+              <button onclick="addOption(${idx})" class="text-sm text-primary hover:text-primaryHover mt-2 flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add option</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function addQuestion() {
+      editorQuestions.push({
+        id: 'q' + Date.now(),
+        type: 'text',
+        title: 'New Question'
+      });
+      renderQuestions();
+    }
+
+    function removeQuestion(idx) {
+      editorQuestions.splice(idx, 1);
+      renderQuestions();
+    }
+
+    function updateQuestion(idx, field, value) {
+      editorQuestions[idx][field] = value;
+      if (field === 'type' && (value === 'radio' || value === 'checkbox')) {
+        if (!editorQuestions[idx].options) editorQuestions[idx].options = ['Option 1', 'Option 2'];
+      }
+      renderQuestions();
+    }
+
+    function addOption(qIdx) {
+      if (!editorQuestions[qIdx].options) editorQuestions[qIdx].options = [];
+      editorQuestions[qIdx].options.push(`Option ${editorQuestions[qIdx].options.length + 1}`);
+      renderQuestions();
+    }
+
+    function updateOption(qIdx, oIdx, value) {
+      editorQuestions[qIdx].options[oIdx] = value;
+    }
+
+    function removeOption(qIdx, oIdx) {
+      editorQuestions[qIdx].options.splice(oIdx, 1);
+      renderQuestions();
+    }
+
+    async function saveDefinition() {
+      const btn = document.getElementById('saveDefBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      
+      try {
+        const res = await fetch(`${API}/v1/surveys/${currentSurveyId}/definition`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentUser.userId, definition: { questions: editorQuestions } })
+        });
+        if (!res.ok) throw new Error('Failed to save questions');
+        showToast('Questions saved successfully');
+      } catch (e) {
+        alert(e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Questions';
+      }
+    }
+
+    // Results Logic
+    async function viewResults() {
+      switchView('results-view');
+      document.getElementById('results-tbody').innerHTML = '<tr><td colspan="100%" class="text-center py-8 text-textMuted">Loading results...</td></tr>';
+      
+      try {
+        // Fetch definition for column headers
+        const defRes = await fetch(`${API}/v1/surveys/${currentSurveyId}/definition?userId=${currentUser.userId}`);
+        const defData = await defRes.json();
+        const questions = defData.questions || [];
+        
+        // Fetch responses
+        const res = await fetch(`${API}/v1/surveys/${currentSurveyId}/responses?userId=${currentUser.userId}`);
+        const responses = await res.json();
+        
+        document.getElementById('resultsCount').textContent = `${responses.length} responses`;
+        
+        // Build table headers
+        let theadHtml = '<th class="p-4 font-semibold text-sm">Time</th><th class="p-4 font-semibold text-sm">Respondent ID</th>';
+        questions.forEach(q => {
+          theadHtml += `<th class="p-4 font-semibold text-sm whitespace-nowrap">${q.title}</th>`;
+        });
+        document.getElementById('results-thead').innerHTML = theadHtml;
+        
+        // Build table rows
+        if (!responses.length) {
+          document.getElementById('results-tbody').innerHTML = `<tr><td colspan="${questions.length + 2}" class="text-center py-12 text-textMuted">No responses yet.</td></tr>`;
+          return;
+        }
+
+        const tbodyHtml = responses.map(r => {
+          const d = new Date(r.ts);
+          const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          
+          let rowHtml = `<td class="p-4 text-sm text-textMuted whitespace-nowrap">${timeStr}</td>`;
+          rowHtml += `<td class="p-4 text-sm font-mono text-primary">${r.responderId || 'Anonymous'}</td>`;
+          
+          questions.forEach(q => {
+            const ans = r.answers[q.id];
+            let ansDisplay = '-';
+            
+            if (ans !== undefined && ans !== null) {
+              if (Array.isArray(ans)) {
+                ansDisplay = ans.join(', ');
+              } else {
+                ansDisplay = String(ans);
+              }
+            }
+            rowHtml += `<td class="p-4 text-sm truncate max-w-[200px]" title="${ansDisplay}">${ansDisplay}</td>`;
+          });
+          
+          return `<tr class="hover:bg-black/20 transition-colors">${rowHtml}</tr>`;
+        }).join('');
+        
+        document.getElementById('results-tbody').innerHTML = tbodyHtml;
+        
+      } catch (e) {
+        document.getElementById('results-tbody').innerHTML = '<tr><td colspan="100%" class="text-red-500 text-center py-8">Failed to load results.</td></tr>';
+      }
+    }
+
+    function closeResults() {
+      switchView('editor-view');
+    }
       e.preventDefault();
       const btn = document.getElementById('createBtn');
       btn.disabled = true;
