@@ -1,0 +1,44 @@
+{
+  "Comment": "ACM Validation records",
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_8263e1ef3f72e636e04815a5ce2c2070.10xquery.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_b477e1b653b13c3b1b04020391d46f18.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_3c686dd6d9f87bea334800eec07c7d2b.www.10xquery.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_cbcd97b3ba096f82513716f78100a4f3.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    },
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_1fb35d79653cda15453328a9e9759d57.api.10xquery.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "_726347ad3aba51c65f4dbbb0367e8cd0.jkddzztszm.acm-validations.aws."
+          }
+        ]
+      }
+    }
+  ]
+}

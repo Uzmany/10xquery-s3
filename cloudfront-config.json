@@ -1,0 +1,43 @@
+{
+    "CallerReference": "10xquery-initial-deploy",
+    "Aliases": {
+        "Quantity": 2,
+        "Items": [
+            "10xquery.com",
+            "www.10xquery.com"
+        ]
+    },
+    "DefaultRootObject": "index.html",
+    "Origins": {
+        "Quantity": 1,
+        "Items": [
+            {
+                "Id": "S3-www.10xquery.com",
+                "DomainName": "www.10xquery.com.s3-website-us-east-1.amazonaws.com",
+                "CustomOriginConfig": {
+                    "HTTPPort": 80,
+                    "HTTPSPort": 443,
+                    "OriginProtocolPolicy": "http-only"
+                }
+            }
+        ]
+    },
+    "DefaultCacheBehavior": {
+        "TargetOriginId": "S3-www.10xquery.com",
+        "ForwardedValues": {
+            "QueryString": false,
+            "Cookies": {
+                "Forward": "none"
+            }
+        },
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "MinTTL": 0
+    },
+    "Comment": "10xQuery S3 website",
+    "Enabled": true,
+    "ViewerCertificate": {
+        "ACMCertificateArn": "arn:aws:acm:us-east-1:912112639269:certificate/555c2636-a11f-4a10-8ef0-0770a857d211",
+        "SSLSupportMethod": "sni-only",
+        "MinimumProtocolVersion": "TLSv1.2_2021"
+    }
+}

@@ -1,0 +1,10 @@
+[
+    {
+        "Field": "host-header",
+        "HostHeaderConfig": {
+            "Values": [
+                "api.10xquery.com"
+            ]
+        }
+    }
+]
