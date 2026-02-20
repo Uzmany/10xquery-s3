@@ -7,9 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
   <style>
-    /* ─────────────────────────────────────────────────
-       RESET & TOKENS
-    ───────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -39,8 +36,9 @@
       --ease: cubic-bezier(.4,0,.2,1);
       --t-fast: 120ms;
       --t-mid:  200ms;
-      --shadow-lg: 0 4px 16px rgba(0,0,0,.09), 0 1px 4px rgba(0,0,0,.05);
+      --nav-h:  56px;
       --nav-bg: rgba(240, 245, 241, 0.92);
+      --shadow-lg: 0 4px 16px rgba(0,0,0,.09), 0 1px 4px rgba(0,0,0,.05);
     }
 
     html.dark {
@@ -68,314 +66,294 @@
       --nav-bg:     rgba(6, 10, 20, 0.85);
     }
 
-    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: auto; transition: background-color 200ms, color 200ms; }
+    html {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--t1);
+      -webkit-font-smoothing: auto;
+      transition: background-color 200ms, color 200ms;
+    }
     html.dark { -webkit-font-smoothing: antialiased; }
     body { min-height: 100vh; display: flex; flex-direction: column; }
     button, input, textarea, select { font-family: inherit; cursor: pointer; }
-    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
 
-    /* ─────────────────────────────────────────────────
-       ANIMATIONS
-    ───────────────────────────────────────────────── */
     @keyframes spin   { to { transform: rotate(360deg); } }
-    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .fade-in { animation: fadeUp .2s var(--ease) both; }
 
-    .fade-in { animation: fadeUp .25s var(--ease) forwards; }
-
-    /* ─────────────────────────────────────────────────
-       NAV
-    ───────────────────────────────────────────────── */
+    /* ── NAV ── */
     .nav {
-      height: 56px; flex-shrink: 0;
+      height: var(--nav-h); flex-shrink: 0;
       border-bottom: 1px solid var(--bd);
-      background: var(--nav-bg);
-      backdrop-filter: blur(16px);
+      background: var(--nav-bg); backdrop-filter: blur(16px);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 28px;
-      position: sticky; top: 0; z-index: 10;
+      position: sticky; top: 0; z-index: 50;
     }
-    .nav-brand {
-      display: flex; align-items: center; gap: 9px;
-      text-decoration: none;
-    }
+    .nav-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; }
     .nav-icon {
-      width: 28px; height: 28px;
+      width: 28px; height: 28px; border-radius: 7px;
       background: linear-gradient(135deg, var(--blue), var(--violet));
-      border-radius: 7px;
       display: flex; align-items: center; justify-content: center;
     }
     .nav-name { font-size: 14.5px; font-weight: 700; letter-spacing: -.3px; color: var(--t1); }
-    .nav-right { font-size: 12px; color: var(--t3); }
     .nav-theme-btn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 5px 11px;
+      display: flex; align-items: center; gap: 6px; padding: 5px 11px;
       background: var(--surface-2); border: 1px solid var(--bd-2);
       border-radius: 20px; color: var(--t2); font-size: 11.5px; font-weight: 500;
       cursor: pointer; transition: all var(--t-fast) var(--ease);
     }
     .nav-theme-btn:hover { background: var(--surface-3); color: var(--t1); }
 
-    /* ─────────────────────────────────────────────────
-       LAYOUT
-    ───────────────────────────────────────────────── */
-    .main {
-      flex: 1; display: flex; align-items: flex-start; justify-content: center;
-      padding: 40px 24px 80px;
-    }
-    .content {
-      width: 100%;
-      max-width: 740px;
-      transition: max-width .3s cubic-bezier(.4,0,.2,1);
-    }
-    /* Matrix surveys expand to use more screen real estate */
-    .content.matrix-mode { max-width: min(1120px, calc(100vw - 48px)); }
-
-    /* ─────────────────────────────────────────────────
-       LOADING STATE
-    ───────────────────────────────────────────────── */
-    #view-loading {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 80px 0; gap: 16px;
-      color: var(--t2); font-size: 13.5px;
-    }
-    .loader {
-      width: 32px; height: 32px;
-      border: 2.5px solid var(--bd-2);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    /* ─────────────────────────────────────────────────
-       FORM CONTROLS
-    ───────────────────────────────────────────────── */
-    .field-label {
-      display: block; font-size: 12.5px; font-weight: 500;
-      color: var(--t2); margin-bottom: 6px; letter-spacing: .01em;
-    }
-    .field-input {
-      width: 100%;
-      background: var(--bg); border: 1px solid var(--bd-2);
-      color: var(--t1); padding: 10px 13px;
-      border-radius: var(--r); font-size: 13.5px;
-      outline: none; resize: vertical;
-      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
-    }
-    .field-input::placeholder { color: var(--t3); }
-    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
-
-    /* Radio / Checkbox question options */
-    .choice-group { display: flex; flex-direction: column; gap: 8px; }
-    .choice-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px;
-      background: var(--surface-2);
-      border: 1px solid var(--bd); border-radius: var(--r);
-      cursor: pointer;
-      transition: all var(--t-fast) var(--ease);
-    }
-    .choice-item:hover { border-color: var(--bd-2); background: var(--surface-3); }
-    .choice-item:has(input:checked) {
-      border-color: var(--blue);
-      background: var(--blue-dim);
-    }
-    .choice-item input[type="radio"],
-    .choice-item input[type="checkbox"] {
-      width: 15px; height: 15px; flex-shrink: 0;
-      accent-color: var(--blue); cursor: pointer;
-    }
-    .choice-item-label { font-size: 13.5px; color: var(--t1); cursor: pointer; }
-
-    /* ─────────────────────────────────────────────────
-       BUTTONS
-    ───────────────────────────────────────────────── */
+    /* ── BUTTONS ── */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      gap: 7px; padding: 10px 20px;
-      border-radius: var(--r); font-size: 13.5px; font-weight: 500;
+      gap: 7px; padding: 10px 22px;
+      border-radius: var(--r); font-size: 14px; font-weight: 600;
       border: 1px solid transparent;
-      transition: all var(--t-fast) var(--ease); white-space: nowrap;
+      transition: all var(--t-fast) var(--ease); white-space: nowrap; line-height: 1;
     }
     .btn:disabled { opacity: .45; cursor: not-allowed !important; transform: none !important; }
-    
-    .btn-primary {
-      background: var(--blue); color: #fff; border-color: var(--blue);
-    }
+    .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
     .btn-primary:hover:not(:disabled) {
       background: var(--blue-dark); border-color: var(--blue-dark);
       box-shadow: 0 4px 16px var(--blue-glow); transform: translateY(-1px);
     }
     .btn-primary:active:not(:disabled) { transform: none; box-shadow: none; }
-
-    .btn-ghost {
-      background: transparent; color: var(--t2); border-color: var(--bd-2);
-    }
+    .btn-ghost { background: transparent; color: var(--t2); border-color: var(--bd-2); }
     .btn-ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--t1); border-color: var(--bd-3); }
-
+    .btn-sm { padding: 7px 14px; font-size: 12.5px; }
     .spinner {
-      width: 14px; height: 14px;
+      width: 15px; height: 15px;
       border: 2px solid rgba(255,255,255,.25); border-top-color: #fff;
       border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
     }
 
-    /* ─────────────────────────────────────────────────
-       SURVEY CARD
-    ───────────────────────────────────────────────── */
-    .survey-card {
-      background: var(--surface-1);
-      border: 1px solid var(--bd-2);
-      border-radius: var(--r-xl);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
+    /* ── FORM CONTROLS ── */
+    .field-label { display: block; font-size: 13px; font-weight: 500; color: var(--t2); margin-bottom: 7px; }
+    .field-input {
+      width: 100%;
+      background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 10px 13px;
+      border-radius: var(--r); font-size: 14px; outline: none; resize: vertical;
+      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
     }
+    .field-input::placeholder { color: var(--t3); }
+    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
 
-    .survey-header {
-      padding: 32px 36px 28px;
+    /* ── CENTERED VIEWS (loading / auth / success / error) ── */
+    .centered-view {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 48px 24px 80px; min-height: calc(100vh - var(--nav-h));
+    }
+    .loader {
+      width: 32px; height: 32px;
+      border: 2.5px solid var(--bd-2); border-top-color: var(--blue);
+      border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 16px;
+    }
+    .loading-text { font-size: 14px; color: var(--t2); }
+
+    /* Auth gate */
+    .auth-card {
+      width: 100%; max-width: 400px;
+      background: var(--surface-1); border: 1px solid var(--bd-2);
+      border-radius: var(--r-xl); overflow: hidden; box-shadow: var(--shadow-lg);
+    }
+    .auth-card-head {
+      padding: 32px 32px 24px; text-align: center;
       border-bottom: 1px solid var(--bd);
-      background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
-      position: relative;
+      background: linear-gradient(to bottom, var(--surface-2), var(--surface-1));
     }
-    /* Subtle accent line at the top */
-    .survey-header::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    .lock-icon {
+      width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 14px;
+      background: var(--red-dim); border: 1px solid var(--bd-2);
+      display: flex; align-items: center; justify-content: center; color: var(--red);
+    }
+    .auth-card-title { font-size: 18px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 6px; }
+    .auth-card-sub { font-size: 13px; color: var(--t2); line-height: 1.6; }
+    .auth-card-body { padding: 24px 32px 28px; }
+    .access-id-input {
+      width: 100%; text-align: center;
+      font-size: 22px; font-weight: 600; letter-spacing: .3em; font-family: monospace;
+      background: var(--bg); border: 1px solid var(--bd-2); color: var(--t1);
+      padding: 14px; border-radius: var(--r); outline: none; margin-bottom: 8px;
+      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    }
+    .access-id-input::placeholder { color: var(--t3); letter-spacing: .1em; font-size: 18px; }
+    .access-id-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
+    .access-id-hint { font-size: 12px; color: var(--t3); text-align: center; margin-bottom: 20px; }
+    .auth-err {
+      padding: 10px 13px; margin-bottom: 14px;
+      background: var(--red-dim); border: 1px solid var(--bd-2);
+      border-radius: var(--r); font-size: 12.5px; color: var(--red); display: none;
+    }
+
+    /* Success / Error */
+    .state-icon {
+      width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .state-icon.ok  { background: var(--green-dim); color: var(--green); }
+    .state-icon.err { background: var(--red-dim);   color: var(--red); }
+    .state-title { font-size: 24px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 10px; }
+    .state-desc  { font-size: 14px; color: var(--t2); line-height: 1.65; max-width: 360px; text-align: center; margin: 0 auto 28px; }
+
+    /* ═══════════════════════════════════════════
+       FULL-PAGE SURVEY VIEW
+    ═══════════════════════════════════════════ */
+    #view-survey {
+      flex: 1; display: flex; flex-direction: column;
+      min-height: calc(100vh - var(--nav-h));
+    }
+
+    /* Survey header */
+    .sp-header {
+      padding: 44px 64px 36px;
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--bd-2);
+      position: relative; flex-shrink: 0;
+    }
+    /* Top gradient accent */
+    .sp-header::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, var(--blue), var(--violet));
-      border-radius: var(--r-xl) var(--r-xl) 0 0;
     }
-    .survey-title {
-      font-size: 24px; font-weight: 700; letter-spacing: -.5px;
-      color: var(--t1); margin-bottom: 8px; line-height: 1.25;
+    .sp-header-inner { max-width: 900px; }
+    .sp-title {
+      font-size: 28px; font-weight: 700; letter-spacing: -.55px;
+      color: var(--t1); margin-bottom: 10px; line-height: 1.2;
     }
-    .survey-desc {
-      font-size: 14px; color: var(--t2); line-height: 1.7; max-width: 640px;
+    .sp-desc {
+      font-size: 15px; color: var(--t2); line-height: 1.7; max-width: 600px;
     }
-    /* Matrix mode: show a subtle context chip in the header */
-    .survey-matrix-tag {
-      display: inline-flex; align-items: center; gap: 5px;
-      margin-top: 14px;
-      padding: 5px 10px;
+    .sp-matrix-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 16px; padding: 5px 12px;
       background: var(--blue-dim); border: 1px solid var(--bd-2);
-      border-radius: 20px; font-size: 11.5px; font-weight: 500; color: var(--blue);
+      border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--blue);
     }
 
-    .survey-body { padding: 28px 36px 32px; }
+    /* Survey content body */
+    .sp-body { flex: 1; }
 
-    /* Question block */
-    .q-block { margin-bottom: 28px; }
+    /* Standard form: readable content column */
+    .sp-body.standard { padding: 40px 64px; }
+    .sp-standard-inner { max-width: 680px; }
+
+    /* Question block in standard form */
+    .q-block { margin-bottom: 32px; }
     .q-block:last-child { margin-bottom: 0; }
-    .q-number-label {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 10px;
+    .q-label {
+      font-size: 15px; font-weight: 600; color: var(--t1);
+      margin-bottom: 12px; line-height: 1.45; display: flex; gap: 10px; align-items: flex-start;
     }
-    .q-num-badge {
+    .q-num {
+      display: inline-flex; align-items: center; justify-content: center;
       width: 24px; height: 24px; flex-shrink: 0;
       background: var(--blue-dim); border: 1px solid var(--bd-2);
-      border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11.5px; font-weight: 700; color: var(--blue);
+      border-radius: 7px; font-size: 11.5px; font-weight: 700; color: var(--blue);
+      margin-top: 1px;
     }
-    .q-title {
-      font-size: 15px; font-weight: 600; color: var(--t1); line-height: 1.4;
-    }
-    .q-required { color: var(--red); margin-left: 2px; }
+    .q-divider { height: 1px; background: var(--bd-2); margin: 32px 0; }
 
-    /* divider between questions */
-    .q-divider { height: 1px; background: var(--bd); margin: 28px 0; }
+    /* Choice options */
+    .choice-group { display: flex; flex-direction: column; gap: 8px; }
+    .choice-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px;
+      background: var(--surface-1); border: 1px solid var(--bd-2);
+      border-radius: var(--r); cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .choice-item:hover { border-color: var(--bd-3); background: var(--surface-2); }
+    .choice-item:has(input:checked) { border-color: var(--blue); background: var(--blue-dim); }
+    .choice-item input { width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--blue); cursor: pointer; }
+    .choice-item-label { font-size: 14px; color: var(--t1); }
 
-    .survey-footer {
-      padding: 20px 36px 28px;
-      border-top: 1px solid var(--bd);
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--surface-1);
-    }
-    .survey-footer-meta {
-      font-size: 12px; color: var(--t3);
-    }
-
-    /* ── Multi-entry (slots) layout ── */
-    .multi-slot-group {
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .multi-slot-item {
-      display: flex; align-items: flex-start; gap: 10px;
-    }
-    .multi-slot-num {
-      width: 20px; padding-top: 10px;
-      font-size: 11.5px; font-weight: 700; color: var(--blue);
-      text-align: right; flex-shrink: 0; line-height: 1;
-    }
+    /* Multi-slot */
+    .multi-slot-group { display: flex; flex-direction: column; gap: 8px; }
+    .multi-slot-item  { display: flex; align-items: flex-start; gap: 10px; }
+    .multi-slot-num   { width: 20px; padding-top: 11px; font-size: 11.5px; font-weight: 700; color: var(--blue); text-align: right; flex-shrink: 0; }
     .multi-slot-item .field-input { flex: 1; }
 
-    /* ── Matrix survey form ── */
-    .matrix-form-wrap {
+    /* ── MATRIX FORM: full-width spreadsheet ── */
+    .sp-body.matrix { padding: 0; }
+
+    .matrix-tbl-wrap {
       overflow-x: auto;
-      /* Flush to the card edges — no extra margin */
-      margin: 0 -36px;          /* cancel body padding */
-      border-top: 1px solid var(--bd);
+      /* fill entire remaining page height */
+      min-height: 200px;
     }
-    .matrix-form-tbl {
-      width: 100%; border-collapse: collapse;
-      /* No min-width override — let column widths drive the table width */
+
+    .matrix-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
     }
-    /* Column headers */
-    .matrix-form-tbl th {
-      padding: 11px 14px;
+
+    /* Sticky column headers */
+    .matrix-tbl thead { position: sticky; top: var(--nav-h); z-index: 20; }
+    .matrix-tbl th {
+      padding: 12px 16px;
       background: var(--surface-2);
       border-bottom: 2px solid var(--bd-2);
       border-right: 1px solid var(--bd);
       font-size: 11.5px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .06em; color: var(--t2);
-      white-space: nowrap; text-align: left;
-      min-width: 180px;          /* each question column has room */
+      letter-spacing: .07em; color: var(--t2); text-align: left; white-space: nowrap;
+      min-width: 200px;
     }
-    .matrix-form-tbl th:first-child {
-      min-width: 150px; max-width: 220px;
-      border-right: 2px solid var(--bd-2);
+    .matrix-tbl th:first-child {
+      min-width: 160px; max-width: 200px;
       background: var(--surface-3);
-      position: sticky; left: 0; z-index: 2;
+      border-right: 2px solid var(--bd-2);
+      position: sticky; left: 0; z-index: 21; /* above other sticky ths */
     }
-    .matrix-form-tbl th:last-child { border-right: none; min-width: 0; width: 42px; }
+    .matrix-tbl th:last-child { min-width: 0; width: 50px; border-right: none; }
 
     /* Data cells */
-    .matrix-form-tbl td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--bd); border-right: 1px solid var(--bd);
+    .matrix-tbl td {
+      padding: 0; /* padding goes inside the cell wrapper for clean borders */
+      border-bottom: 1px solid var(--bd);
+      border-right: 1px solid var(--bd);
       vertical-align: middle;
       background: var(--bg);
-      min-width: 180px;
+      min-width: 200px;
     }
-    .matrix-form-tbl td:first-child {
+    .matrix-tbl td:first-child {
       background: var(--surface-2);
       border-right: 2px solid var(--bd-2);
-      position: sticky; left: 0; z-index: 1;
-      min-width: 150px;
+      position: sticky; left: 0; z-index: 10;
+      min-width: 160px;
     }
-    .matrix-form-tbl td:last-child { border-right: none; min-width: 0; width: 42px; text-align: center; }
+    .matrix-tbl td:last-child { min-width: 0; width: 50px; border-right: none; }
+    .matrix-tbl tbody tr:last-child td { border-bottom: none; }
 
-    /* Zebra striping */
-    .matrix-form-tbl tbody tr:nth-child(odd) td  { background: var(--bg); }
-    .matrix-form-tbl tbody tr:nth-child(even) td { background: var(--surface-1); }
-    .matrix-form-tbl tbody tr:nth-child(odd) td:first-child,
-    .matrix-form-tbl tbody tr:nth-child(even) td:first-child { background: var(--surface-2); }
+    /* Alternating rows */
+    .matrix-tbl tbody tr:nth-child(even) td            { background: var(--surface-1); }
+    .matrix-tbl tbody tr:nth-child(even) td:first-child { background: var(--surface-2); }
 
     /* Row hover */
-    .matrix-form-tbl tbody tr:hover td            { background: var(--blue-dim) !important; }
-    .matrix-form-tbl tbody tr:hover td:first-child { background: var(--surface-3) !important; }
+    .matrix-tbl tbody tr:hover td            { background: var(--blue-dim) !important; }
+    .matrix-tbl tbody tr:hover td:first-child { background: var(--surface-3) !important; }
 
-    .matrix-form-tbl tbody tr:last-child td { border-bottom: none; }
+    /* Cell inner padding wrapper */
+    .cell-pad { padding: 10px 14px; }
 
-    /* Row label input */
-    .matrix-form-tbl .m-key-input {
-      background: transparent; border: none; outline: none; color: var(--t1);
-      font-size: 13.5px; font-weight: 600; width: 100%; font-family: inherit;
-      padding: 4px 0; cursor: default;
+    /* Row label text */
+    .row-key-text {
+      font-size: 13.5px; font-weight: 600; color: var(--t1);
+    }
+    .row-key-input {
+      background: transparent; border: none; outline: none;
+      font-size: 13.5px; font-weight: 600; color: var(--t1);
+      width: 100%; font-family: inherit; padding: 0;
     }
 
     /* Cell inputs */
-    .matrix-form-tbl .m-cell-input {
+    .cell-input {
       width: 100%;
       background: var(--bg); border: 1px solid var(--bd-2);
       color: var(--t1); padding: 9px 11px; border-radius: 7px;
@@ -383,128 +361,54 @@
       transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
       resize: vertical;
     }
-    .matrix-form-tbl .m-cell-input:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px var(--blue-glow);
-      background: var(--surface-1);
-    }
-    .matrix-form-tbl select.m-cell-input { cursor: pointer; }
-    .matrix-form-tbl .m-cb-group { display: flex; flex-direction: column; gap: 7px; padding: 4px 0; }
-    .matrix-form-tbl .m-cb-item {
+    .cell-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); background: var(--surface-1); }
+    select.cell-input { cursor: pointer; }
+
+    .cell-cb-group { display: flex; flex-direction: column; gap: 8px; }
+    .cell-cb-item {
       display: flex; align-items: center; gap: 8px;
       font-size: 13.5px; color: var(--t1); cursor: pointer;
     }
-    .matrix-form-tbl .m-cb-item:hover { color: var(--blue); }
-    .matrix-form-tbl .m-cb-item input { width: 15px; height: 15px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
+    .cell-cb-item:hover { color: var(--blue); }
+    .cell-cb-item input { width: 15px; height: 15px; accent-color: var(--blue); flex-shrink: 0; cursor: pointer; }
 
-    /* Add row footer button */
-    .matrix-add-row-btn {
+    /* Add row button */
+    .matrix-add-row {
       display: flex; align-items: center; justify-content: center; gap: 7px;
-      width: 100%; padding: 13px;
+      width: 100%; padding: 14px;
       border: none; border-top: 1px solid var(--bd-2);
-      background: var(--surface-1); color: var(--t3); font-size: 13px;
-      font-weight: 500; cursor: pointer; font-family: inherit;
+      background: var(--surface-1); color: var(--t3); font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
       transition: all var(--t-fast) var(--ease);
     }
-    .matrix-add-row-btn:hover { background: var(--surface-2); color: var(--blue); }
+    .matrix-add-row:hover { background: var(--surface-2); color: var(--blue); }
 
-    /* Row delete button */
-    .matrix-del-row {
-      width: 28px; height: 28px; border-radius: 7px; border: 1px solid transparent;
+    /* Row delete */
+    .row-del {
+      width: 30px; height: 30px; border-radius: 7px; border: 1px solid transparent;
       background: transparent; color: var(--t3); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: all var(--t-fast) var(--ease);
+      transition: all var(--t-fast) var(--ease); margin: 0 auto;
     }
-    .matrix-del-row:hover { background: var(--red-dim); color: var(--red); border-color: var(--bd-2); }
+    .row-del:hover { background: var(--red-dim); color: var(--red); border-color: var(--bd-2); }
 
-    /* ─────────────────────────────────────────────────
-       AUTH GATE
-    ───────────────────────────────────────────────── */
-    #view-auth {
-      width: 100%; max-width: 420px; margin: 0 auto;
-    }
-    .auth-gate-card {
+    /* ── STICKY FOOTER ── */
+    .sp-footer {
+      position: sticky; bottom: 0; z-index: 30;
+      padding: 14px 64px;
       background: var(--surface-1);
-      border: 1px solid var(--bd-2);
-      border-radius: var(--r-xl);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
+      border-top: 1px solid var(--bd-2);
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(16px);
     }
-    .auth-gate-header {
-      padding: 28px 32px 22px;
-      border-bottom: 1px solid var(--bd);
-      text-align: center;
-    }
-    .lock-icon {
-      width: 44px; height: 44px; margin: 0 auto 14px;
-      background: var(--red-dim);
-      border: 1px solid rgba(239,68,68,.2);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      color: #F87171;
-    }
-    .auth-gate-title {
-      font-size: 17px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 6px;
-    }
-    .auth-gate-sub { font-size: 13px; color: var(--t2); line-height: 1.55; }
-    .auth-gate-body { padding: 24px 32px 28px; }
-    .access-id-input {
-      width: 100%; text-align: center;
-      font-size: 22px; font-weight: 600; letter-spacing: .25em; font-family: monospace;
-      background: var(--bg); border: 1px solid var(--bd-2);
-      color: var(--t1); padding: 14px;
-      border-radius: var(--r); outline: none;
-      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
-      margin-bottom: 8px;
-    }
-    .access-id-input::placeholder { color: var(--t3); letter-spacing: .1em; font-size: 18px; }
-    .access-id-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
-    .access-id-hint { font-size: 12px; color: var(--t3); text-align: center; margin-bottom: 20px; }
-    .auth-error-msg {
-      padding: 10px 13px; margin-bottom: 16px;
-      background: var(--red-dim); border: 1px solid rgba(239,68,68,.2);
-      border-radius: var(--r); font-size: 12.5px; color: #F87171;
-      display: none;
-    }
+    .sp-footer-meta { font-size: 13px; color: var(--t3); }
 
-    /* ─────────────────────────────────────────────────
-       SUCCESS STATE
-    ───────────────────────────────────────────────── */
-    #view-success {
-      text-align: center; padding: 60px 0;
-    }
-    .success-icon {
-      width: 56px; height: 56px; margin: 0 auto 20px;
-      background: var(--green-dim);
-      border: 1px solid rgba(16,185,129,.2);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: #34D399;
-    }
-    .success-title { font-size: 22px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 10px; }
-    .success-desc { font-size: 14px; color: var(--t2); line-height: 1.6; max-width: 340px; margin: 0 auto 28px; }
-
-    /* ─────────────────────────────────────────────────
-       ERROR STATE
-    ───────────────────────────────────────────────── */
-    #view-error {
-      text-align: center; padding: 60px 0;
-    }
-    .error-icon {
-      width: 56px; height: 56px; margin: 0 auto 20px;
-      background: var(--red-dim);
-      border: 1px solid rgba(239,68,68,.2);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      color: #F87171;
-    }
-    .error-title { font-size: 22px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 10px; }
-    .error-desc { font-size: 14px; color: var(--t2); line-height: 1.6; max-width: 340px; margin: 0 auto 28px; }
-
-    @media (max-width: 640px) {
-      .survey-header, .survey-body, .survey-footer,
-      .auth-gate-body, .auth-gate-header { padding-left: 20px; padding-right: 20px; }
-      .main { padding: 20px 14px 60px; }
+    /* Mobile */
+    @media (max-width: 768px) {
+      .sp-header { padding: 28px 20px 24px; }
+      .sp-body.standard { padding: 28px 20px; }
+      .sp-footer { padding: 12px 20px; }
+      .sp-title { font-size: 22px; }
     }
   </style>
 </head>
@@ -533,106 +437,105 @@
     </button>
   </nav>
 
-  <main class="main">
-    <div class="content">
+  <!-- ── Centered states: loading / auth / success / error ── -->
+  <div class="centered-view" id="centered-states">
 
-      <!-- Loading -->
-      <div id="view-loading">
-        <div class="loader"></div>
-        <span>Loading survey…</span>
+    <!-- Loading -->
+    <div id="view-loading">
+      <div class="loader"></div>
+      <span class="loading-text">Loading survey…</span>
     </div>
 
-      <!-- Auth gate (private surveys) -->
-      <div id="view-auth" style="display:none;">
-        <div class="auth-gate-card fade-in">
-          <div class="auth-gate-header">
-            <div class="lock-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-        </div>
-            <h2 class="auth-gate-title">Private Survey</h2>
-            <p class="auth-gate-sub">This survey is restricted. Enter your 8-digit<br>User ID to gain access.</p>
+    <!-- Auth gate (private surveys) -->
+    <div id="view-auth" style="display:none;">
+      <div class="auth-card fade-in">
+        <div class="auth-card-head">
+          <div class="lock-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
           </div>
-          <div class="auth-gate-body">
-            <form onsubmit="event.preventDefault(); handleAuth(event);">
-              <div id="auth-error" class="auth-error-msg"></div>
-              <input
-                type="text"
-                id="viewerId"
-                class="access-id-input"
-                placeholder="00000000"
-                required
-                maxlength="8"
-                autocomplete="off"
-                pattern="[0-9]{8}"
-                inputmode="numeric"
-              >
-              <p class="access-id-hint">Your 8-digit ID can be found in your 10xQuery dashboard.</p>
-              <button type="submit" id="authBtn" class="btn btn-primary" style="width:100%;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  <line x1="12" y1="15" x2="12" y2="17"/>
-                </svg>
-                <span id="authBtnText">Unlock Survey</span>
-              </button>
-        </form>
+          <h2 class="auth-card-title">Private Survey</h2>
+          <p class="auth-card-sub">Enter your 8-digit User ID to access this survey.</p>
+        </div>
+        <div class="auth-card-body">
+        <form onsubmit="event.preventDefault(); handleAuth(event);">
+            <div id="auth-error" class="auth-err"></div>
+            <input type="text" id="viewerId" class="access-id-input" placeholder="00000000"
+              required maxlength="8" autocomplete="off" pattern="[0-9]{8}" inputmode="numeric">
+            <p class="access-id-hint">Find your ID on the 10xQuery dashboard.</p>
+            <button type="submit" id="authBtn" class="btn btn-primary" style="width:100%;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                <line x1="12" y1="15" x2="12" y2="17"/>
+              </svg>
+              <span id="authBtnText">Unlock Survey</span>
+            </button>
+          </form>
+          </div>
       </div>
     </div>
+
+    <!-- Success -->
+    <div id="view-success" style="display:none;" class="fade-in" style="text-align:center;">
+      <div class="state-icon ok">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2 class="state-title">Response Submitted</h2>
+      <p class="state-desc">Thank you for participating. Your response has been securely recorded.</p>
+      <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
         </div>
         
-      <!-- Survey form -->
-      <div id="view-survey" style="display:none;">
-        <div class="survey-card fade-in">
-          <div class="survey-header">
-            <h1 class="survey-title" id="survey-title"></h1>
-            <p class="survey-desc" id="survey-desc"></p>
-          </div>
-          <div class="survey-body">
-            <form id="survey-form" onsubmit="event.preventDefault(); handleSubmit(event);">
-              <div id="questions-container"></div>
-            </form>
-          </div>
-          <div class="survey-footer">
-            <span class="survey-footer-meta" id="surveyFooterMeta"></span>
-            <button type="button" id="submitBtn" class="btn btn-primary" onclick="document.getElementById('survey-form').requestSubmit()">
-              Submit Response
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </div>
+    <!-- Error -->
+    <div id="view-error" style="display:none;" class="fade-in" style="text-align:center;">
+      <div class="state-icon err">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h2 class="state-title" id="error-title">Survey Not Found</h2>
+      <p class="state-desc" id="error-desc">The link may be broken, expired, or you may not have permission.</p>
+      <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
+    </div>
+
+  </div><!-- /centered-states -->
+
+  <!-- ── Full-page survey view ── -->
+  <div id="view-survey" style="display:none;">
+
+    <!-- Header: title + description -->
+    <div class="sp-header">
+      <div class="sp-header-inner">
+        <h1 class="sp-title" id="survey-title"></h1>
+        <p class="sp-desc" id="survey-desc" style="display:none;"></p>
+        <!-- matrix tag injected by JS -->
       </div>
     </div>
 
-      <!-- Success -->
-      <div id="view-success" style="display:none;" class="fade-in">
-        <div class="success-icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <h2 class="success-title">Response Submitted</h2>
-        <p class="success-desc">Thank you for participating. Your response has been securely recorded.</p>
-        <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
-    </div>
-
-      <!-- Error -->
-      <div id="view-error" style="display:none;" class="fade-in">
-        <div class="error-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-        </div>
-        <h2 class="error-title" id="error-title">Survey Not Found</h2>
-        <p class="error-desc" id="error-desc">The link may be broken, expired, or you may not have access.</p>
-        <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
+    <!-- Body: questions or matrix -->
+    <form id="survey-form" onsubmit="event.preventDefault(); handleSubmit(event);" style="flex:1;display:flex;flex-direction:column;">
+      <div class="sp-body" id="sp-body">
+        <div id="questions-container"></div>
       </div>
+    </form>
 
+    <!-- Sticky footer: meta + submit -->
+    <div class="sp-footer">
+      <span class="sp-footer-meta" id="surveyFooterMeta"></span>
+      <button type="button" id="submitBtn" class="btn btn-primary"
+        onclick="document.getElementById('survey-form').requestSubmit()">
+        Submit Response
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
     </div>
-  </main>
+
+  </div><!-- /view-survey -->
+
 
   <script>
     /* ── Theme ── */
@@ -650,183 +553,192 @@
       localStorage.setItem('10xq-theme', isDark ? 'light' : 'dark');
       applyTheme(!isDark);
     }
-    (function() {
-      if (localStorage.getItem('10xq-theme') === 'dark') applyTheme(true);
-    })();
+    (function() { if (localStorage.getItem('10xq-theme') === 'dark') applyTheme(true); })();
 
     const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
       ? 'http://localhost:8000'
       : 'https://api.10xquery.com';
 
-    const params    = new URLSearchParams(location.search);
-    const surveyId  = params.get('id');
+    const params     = new URLSearchParams(location.search);
+    const surveyId   = params.get('id');
     let currentUserId   = null;
     let surveyQuestions = [];
-    let surveyDefinition = null;  // full definition incl. rowLabels
-    let matrixRows = [];          // active row keys during form fill
+    let surveyDefinition = null;
+    let matrixRows       = [];
 
     /* ── View management ── */
     function showView(id) {
-      ['loading','auth','survey','success','error'].forEach(v => {
+      // Hide everything first
+      document.getElementById('centered-states').style.display = 'none';
+      document.getElementById('view-survey').style.display     = 'none';
+      ['loading','auth','success','error'].forEach(v => {
         const el = document.getElementById('view-' + v);
         if (el) el.style.display = 'none';
       });
-      const target = document.getElementById('view-' + id);
-      if (target) target.style.display = '';
+      if (id === 'survey') {
+        document.getElementById('view-survey').style.display = '';
+      } else {
+        document.getElementById('centered-states').style.display = '';
+        const el = document.getElementById('view-' + id);
+        if (el) el.style.display = '';
+      }
     }
 
     /* ── Load survey ── */
     async function loadSurvey(userId = null) {
       if (!surveyId) { showView('error'); return; }
-
       showView('loading');
-
       try {
         const url = `${API}/v1/surveys/${surveyId}${userId ? `?userId=${userId}` : ''}`;
         const res = await fetch(url);
-        
         if (res.status === 403) {
           showView('auth');
           if (userId) {
-            const errEl = document.getElementById('auth-error');
-            errEl.textContent = 'Access denied. That ID is not authorised for this survey.';
-            errEl.style.display = 'block';
+            const e = document.getElementById('auth-error');
+            e.textContent = 'Access denied. That ID is not authorised for this survey.';
+            e.style.display = 'block';
             document.getElementById('viewerId').value = '';
           }
           return;
         }
+        if (!res.ok) { showView('error'); return; }
         
-        if (!res.ok) {
-          showView('error');
-          return;
-        }
-
           const data = await res.json();
           currentUserId = userId;
-          
+
         document.getElementById('survey-title').textContent = data.title || 'Untitled Survey';
+        document.title = `${data.title || 'Survey'} — 10xQuery`;
+          
         const descEl = document.getElementById('survey-desc');
           if (data.description) {
-            descEl.textContent = data.description;
+          descEl.textContent   = data.description;
           descEl.style.display = '';
-          } else {
-          descEl.style.display = 'none';
-          }
+        }
 
-        // Fetch question definition
-        const defUrl = `${API}/v1/surveys/${surveyId}/definition${userId ? `?userId=${userId}` : ''}`;
-        const defRes = await fetch(defUrl);
+        // Fetch definition
+          const defRes = await fetch(`${API}/v1/surveys/${surveyId}/definition${userId ? `?userId=${userId}` : ''}`);
           if (defRes.ok) {
           surveyDefinition = await defRes.json();
           surveyQuestions  = surveyDefinition.questions || [];
-          if (!surveyQuestions.length) {
+          if (!surveyQuestions.length)
             surveyQuestions = [{ id: 'q1', type: 'longtext', title: 'Your response' }];
-          }
-          // Init matrixRows from definition labels (or empty if allowCustomRows only)
           matrixRows = (surveyDefinition.rowLabels || []).slice();
         }
 
         renderQuestions();
         showView('survey');
-
-        // Update page title
-        document.title = `${data.title} — 10xQuery`;
-
-      } catch (err) {
+      } catch {
         document.getElementById('error-title').textContent = 'Connection Error';
         document.getElementById('error-desc').textContent  = 'Unable to reach the server. Please check your connection.';
         showView('error');
       }
     }
 
-    /* ── Render questions ── */
-    function renderQuestions() {
-      const isMatrix = (surveyDefinition?.rowLabels?.length > 0) || surveyDefinition?.allowCustomRows;
-      if (isMatrix) {
-        renderMatrixForm();
-      } else {
-        renderStandardForm();
-      }
+    /* ── Auth handler ── */
+    async function handleAuth(e) {
+      const id = document.getElementById('viewerId').value.trim();
+      if (!id) return;
+      const btn  = document.getElementById('authBtn');
+      const text = document.getElementById('authBtnText');
+      btn.disabled = true; text.textContent = 'Verifying…';
+      document.getElementById('auth-error').style.display = 'none';
+      await loadSurvey(id);
+      btn.disabled = false; text.textContent = 'Unlock Survey';
     }
 
-    /* Standard (non-matrix) form — same as before */
+    /* ── Render dispatcher ── */
+    function renderQuestions() {
+      const isMatrix = (surveyDefinition?.rowLabels?.length > 0) || surveyDefinition?.allowCustomRows;
+      if (isMatrix) renderMatrixForm();
+      else          renderStandardForm();
+    }
+
+    /* ── Standard form ── */
     function renderStandardForm() {
-      document.querySelector('.content')?.classList.remove('matrix-mode');
+      const body = document.getElementById('sp-body');
+      body.className = 'sp-body standard';
       const n = surveyQuestions.length;
-      const meta = document.getElementById('surveyFooterMeta');
-      if (meta) meta.textContent = n + ' question' + (n !== 1 ? 's' : '');
-      const container = document.getElementById('questions-container');
-      let html = '';
+      document.getElementById('surveyFooterMeta').textContent = `${n} question${n!==1?'s':''}`;
+
+      let html = '<div class="sp-standard-inner">';
       surveyQuestions.forEach((q, idx) => {
         if (idx > 0) html += '<div class="q-divider"></div>';
         html += `<div class="q-block">
-          <div class="q-number-label">
-            <div class="q-num-badge">${idx + 1}</div>
-            <span class="q-title">${esc(q.title)}<span class="q-required">*</span></span>
+          <div class="q-label">
+            <span class="q-num">${idx+1}</span>
+            <span>${esc(q.title)}</span>
           </div>`;
+
         if (q.type === 'text') {
           const slots = q.slots || 1;
           if (slots > 1) {
-            html += `<div class="multi-slot-group">`;
+            html += '<div class="multi-slot-group">';
             for (let i = 0; i < slots; i++)
               html += `<div class="multi-slot-item"><span class="multi-slot-num">${i+1}</span><input type="text" id="ans-${q.id}-${i}" class="field-input" placeholder="Entry ${i+1}…"></div>`;
-            html += `</div>`;
+            html += '</div>';
           } else {
             html += `<input type="text" id="ans-${q.id}" class="field-input" placeholder="Your answer…" required>`;
           }
         } else if (q.type === 'longtext') {
           const slots = q.slots || 1;
           if (slots > 1) {
-            html += `<div class="multi-slot-group">`;
+            html += '<div class="multi-slot-group">';
             for (let i = 0; i < slots; i++)
-              html += `<div class="multi-slot-item"><span class="multi-slot-num">${i+1}</span><textarea id="ans-${q.id}-${i}" class="field-input" rows="2" placeholder="Entry ${i+1}…"></textarea></div>`;
-            html += `</div>`;
+              html += `<div class="multi-slot-item"><span class="multi-slot-num">${i+1}</span><textarea id="ans-${q.id}-${i}" class="field-input" rows="3" placeholder="Entry ${i+1}…"></textarea></div>`;
+            html += '</div>';
           } else {
             html += `<textarea id="ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…" required></textarea>`;
           }
         } else if (q.type === 'radio') {
-          html += `<div class="choice-group">`;
+          html += '<div class="choice-group">';
           (q.options||[]).forEach(opt => {
             const s = esc(opt);
             html += `<label class="choice-item"><input type="radio" name="ans-${q.id}" value="${s}" required><span class="choice-item-label">${s}</span></label>`;
           });
-          html += `</div>`;
+          html += '</div>';
         } else if (q.type === 'checkbox') {
-          html += `<div class="choice-group">`;
+          html += '<div class="choice-group">';
           (q.options||[]).forEach(opt => {
             const s = esc(opt);
             html += `<label class="choice-item"><input type="checkbox" name="ans-${q.id}" value="${s}"><span class="choice-item-label">${s}</span></label>`;
           });
-          html += `</div>`;
+          html += '</div>';
         }
-        html += `</div>`;
+        html += '</div>';
       });
-      container.innerHTML = html;
+      html += '</div>';
+      document.getElementById('questions-container').innerHTML = html;
+
+      // Remove matrix tag if present
+      document.getElementById('sp-matrix-tag')?.remove();
     }
 
-    /* Matrix form: rows × questions table */
+    /* ── Matrix form ── */
     function renderMatrixForm() {
-      document.querySelector('.content')?.classList.add('matrix-mode');
+      const body = document.getElementById('sp-body');
+      body.className = 'sp-body matrix';
       const n = surveyQuestions.length;
       const r = matrixRows.length;
-      const meta = document.getElementById('surveyFooterMeta');
-      if (meta) meta.textContent = `${n} question${n!==1?'s':''} · ${r} row${r!==1?'s':''}`;
+      document.getElementById('surveyFooterMeta').textContent =
+        `${n} question${n!==1?'s':''} · ${r} row${r!==1?'s':''}`;
 
-      // Show the matrix context tag in the survey header
-      let tag = document.getElementById('surveyMatrixTag');
-      if (!tag) {
-        tag = document.createElement('div');
-        tag.id = 'surveyMatrixTag';
-        tag.className = 'survey-matrix-tag';
-        tag.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg> Matrix survey — fill in each row`;
-        document.querySelector('.survey-header')?.appendChild(tag);
+      // Matrix context tag in header
+      if (!document.getElementById('sp-matrix-tag')) {
+        const tag = document.createElement('div');
+        tag.id        = 'sp-matrix-tag';
+        tag.className = 'sp-matrix-tag';
+        tag.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg> Matrix survey — fill in each row`;
+        document.querySelector('.sp-header-inner')?.appendChild(tag);
       }
 
-      const container = document.getElementById('questions-container');
       const allowCustom = surveyDefinition?.allowCustomRows || false;
 
-      // Column headers
-      const headerCols = `<th>Row</th>` +
+      // Header row
+      const ths = `<th>Row</th>` +
         surveyQuestions.map(q => `<th>${esc(q.title)}</th>`).join('') +
         (allowCustom ? `<th></th>` : '');
 
@@ -834,56 +746,62 @@
       function buildRow(key, ri) {
         const isFixed = (surveyDefinition.rowLabels||[]).includes(key) && !allowCustom;
         const keyCell = isFixed
-          ? `<td><span class="m-key-input" style="cursor:default;">${esc(key)}</span></td>`
-          : `<td><input type="text" class="m-key-input" id="mkey-${ri}" value="${esc(key)}" placeholder="Row label…" oninput="matrixRows[${ri}]=this.value"></td>`;
+          ? `<td><div class="cell-pad"><span class="row-key-text">${esc(key)}</span></div></td>`
+          : `<td><div class="cell-pad"><input type="text" class="row-key-input" id="mkey-${ri}" value="${esc(key)}" placeholder="Row label…" oninput="matrixRows[${ri}]=this.value"></div></td>`;
+
         const cells = surveyQuestions.map(q => {
           if (q.type === 'text') {
-            return `<td><input type="text" id="mcell-${q.id}-${ri}" class="m-cell-input" placeholder="…"></td>`;
+            return `<td><div class="cell-pad"><input type="text" id="mcell-${q.id}-${ri}" class="cell-input" placeholder="…"></div></td>`;
           } else if (q.type === 'longtext') {
-            return `<td><textarea id="mcell-${q.id}-${ri}" class="m-cell-input" rows="2" placeholder="…"></textarea></td>`;
+            return `<td><div class="cell-pad"><textarea id="mcell-${q.id}-${ri}" class="cell-input" rows="2" placeholder="…"></textarea></div></td>`;
           } else if (q.type === 'radio') {
             const opts = (q.options||[]).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
-            return `<td><select id="mcell-${q.id}-${ri}" class="m-cell-input"><option value="">—</option>${opts}</select></td>`;
+            return `<td><div class="cell-pad"><select id="mcell-${q.id}-${ri}" class="cell-input"><option value="">— select —</option>${opts}</select></div></td>`;
           } else if (q.type === 'checkbox') {
             const cbs = (q.options||[]).map(o =>
-              `<label class="m-cb-item"><input type="checkbox" name="mcb-${q.id}-${ri}" value="${esc(o)}"> ${esc(o)}</label>`
+              `<label class="cell-cb-item"><input type="checkbox" name="mcb-${q.id}-${ri}" value="${esc(o)}"> ${esc(o)}</label>`
             ).join('');
-            return `<td><div class="m-cb-group">${cbs}</div></td>`;
+            return `<td><div class="cell-pad"><div class="cell-cb-group">${cbs}</div></div></td>`;
           }
           return `<td></td>`;
         }).join('');
+
         const delCell = allowCustom && !isFixed
-          ? `<td style="vertical-align:middle;"><button class="matrix-del-row" onclick="deleteMatrixRow(${ri})" title="Remove row"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>`
-          : (matrixRows.length > 0 ? `<td></td>` : '');
+          ? `<td><button type="button" class="row-del" onclick="deleteMatrixRow(${ri})" title="Remove row">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+               </svg>
+             </button></td>`
+          : (allowCustom ? `<td></td>` : '');
+
         return `<tr>${keyCell}${cells}${delCell}</tr>`;
       }
 
-      const bodyRows = matrixRows.map((key, ri) => buildRow(key, ri)).join('');
+      const tbody = matrixRows.map((key, ri) => buildRow(key, ri)).join('');
 
       const addRowBtn = allowCustom
-        ? `<button class="matrix-add-row-btn" type="button" onclick="addMatrixRow()">
+        ? `<button type="button" class="matrix-add-row" onclick="addMatrixRow()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Add Row
           </button>` : '';
 
-      container.innerHTML = `
-        <div class="matrix-form-wrap">
-          <table class="matrix-form-tbl">
-            <thead><tr>${headerCols}</tr></thead>
-            <tbody id="matrix-tbody">${bodyRows}</tbody>
+      document.getElementById('questions-container').innerHTML = `
+        <div class="matrix-tbl-wrap">
+          <table class="matrix-tbl">
+            <thead><tr>${ths}</tr></thead>
+            <tbody>${tbody}</tbody>
           </table>
-        </div>
-        ${addRowBtn}`;
+          ${addRowBtn}
+        </div>`;
     }
 
     function addMatrixRow() {
       matrixRows.push('');
       renderMatrixForm();
-      // Focus the new key input
-      const newIdx = matrixRows.length - 1;
-      setTimeout(() => document.getElementById(`mkey-${newIdx}`)?.focus(), 50);
+      const idx = matrixRows.length - 1;
+      setTimeout(() => document.getElementById(`mkey-${idx}`)?.focus(), 50);
     }
 
     function deleteMatrixRow(ri) {
@@ -891,43 +809,16 @@
       renderMatrixForm();
     }
 
-    function esc(str) {
-      const d = document.createElement('div');
-      d.textContent = str ?? '';
-      return d.innerHTML;
-    }
-
-    /* ── Auth gate handler ── */
-    async function handleAuth(e) {
-      const id   = document.getElementById('viewerId').value.trim();
-      if (!id) return;
-      
-      const btn  = document.getElementById('authBtn');
-      const text = document.getElementById('authBtnText');
-      btn.disabled = true;
-      text.textContent = 'Verifying…';
-
-      const errEl = document.getElementById('auth-error');
-      errEl.style.display = 'none';
-
-      await loadSurvey(id);
-
-        btn.disabled = false;
-      text.textContent = 'Unlock Survey';
-    }
-
-    /* ── Submit handler ── */
+    /* ── Submit ── */
     async function handleSubmit(e) {
-      const answers = {};
+      const answers  = {};
       const isMatrix = (surveyDefinition?.rowLabels?.length > 0) || surveyDefinition?.allowCustomRows;
 
       if (isMatrix) {
-        // Sync any edited key inputs back to matrixRows
         matrixRows.forEach((_, ri) => {
           const keyEl = document.getElementById(`mkey-${ri}`);
           if (keyEl) matrixRows[ri] = keyEl.value.trim() || `Row ${ri+1}`;
         });
-        // Collect per-row, per-question answers
         for (const q of surveyQuestions) {
           answers[q.id] = {};
           matrixRows.forEach((key, ri) => {
@@ -944,22 +835,17 @@
           });
         }
       } else {
-        // Standard form collection
       for (const q of surveyQuestions) {
         if (q.type === 'text' || q.type === 'longtext') {
             const slots = q.slots || 1;
             if (slots > 1) {
-              answers[q.id] = Array.from({length: slots}, (_, i) => {
-                const el = document.getElementById(`ans-${q.id}-${i}`);
-                return el ? el.value.trim() : '';
-              });
+              answers[q.id] = Array.from({length:slots}, (_, i) =>
+                document.getElementById(`ans-${q.id}-${i}`)?.value.trim() || '');
             } else {
-              const el = document.getElementById(`ans-${q.id}`);
-              if (el) answers[q.id] = el.value.trim();
+              answers[q.id] = document.getElementById(`ans-${q.id}`)?.value.trim() || '';
             }
         } else if (q.type === 'radio') {
-          const checked = document.querySelector(`input[name="ans-${q.id}"]:checked`);
-          if (checked) answers[q.id] = checked.value;
+            answers[q.id] = document.querySelector(`input[name="ans-${q.id}"]:checked`)?.value || '';
         } else if (q.type === 'checkbox') {
             answers[q.id] = Array.from(
               document.querySelectorAll(`input[name="ans-${q.id}"]:checked`)
@@ -983,18 +869,19 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-
         if (!res.ok) throw new Error('Server rejected the submission');
         showView('success');
-
       } catch (err) {
         btn.disabled = false;
-        btn.innerHTML = `Submit Response
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>`;
+        btn.innerHTML = `Submit Response <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
         alert('Submission failed: ' + err.message);
       }
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str ?? '';
+      return d.innerHTML;
     }
 
     // Boot
@@ -1002,3 +889,4 @@
   </script>
 </body>
 </html>
+
