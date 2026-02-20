@@ -6,7 +6,7 @@ S3_BUCKET="s3://www.10xquery.com/"
 CF_DIST_WWW="E2BTNOZGJYMK2F"
 CF_DIST_APEX="E2BTNOZGJYMK2F"
 EC2_HOST="ec2-user@54.242.99.16"
-EC2_KEY="$HOME/.ssh/10xquery_backend.pem"
+EC2_KEY="$HOME/.ssh/ketzek_ai_backend_2.pem"
 EC2_APP_DIR="/home/ec2-user/10xquery-s3/10xquery-api"
 
 # Files to exclude from S3 upload
