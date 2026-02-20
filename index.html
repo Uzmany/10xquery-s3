@@ -477,6 +477,25 @@
       font-size: 12px; color: var(--t3); line-height: 1.6;
     }
 
+    /* Sign in / Create account tab toggle */
+    .auth-tabs {
+      display: flex; gap: 0;
+      background: var(--surface-2); border: 1px solid var(--bd-2);
+      border-radius: var(--r); padding: 3px; margin-bottom: 20px;
+    }
+    .auth-tab {
+      flex: 1; padding: 9px 12px;
+      border-radius: 6px; border: none; background: transparent;
+      color: var(--t2); font-size: 13.5px; font-weight: 500;
+      cursor: pointer; transition: all var(--t-fast) var(--ease);
+      font-family: inherit;
+    }
+    .auth-tab:hover:not(.active) { color: var(--t1); }
+    .auth-tab.active {
+      background: var(--surface-1); color: var(--t1); font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1), 0 0 0 1px var(--bd-2);
+    }
+
     /* ─────────────────────────────────────────────────
        APP SHELL
     ───────────────────────────────────────────────── */
@@ -1354,14 +1373,14 @@
       <p class="auth-tagline">
         Matrix surveys, real-time analytics, collaborator access controls, and structured data exports — built for teams that collect complex data at scale.
       </p>
-    </div>
+          </div>
 
     <!-- Product preview card -->
     <div class="product-preview">
       <div class="preview-chrome">
         <div class="preview-dots"><span></span><span></span><span></span></div>
         <div class="preview-url">10xquery.com/survey.html?id=e3f7a2…</div>
-      </div>
+          </div>
       <div class="preview-survey-hdr">
         <span>Supplier Risk Assessment — Q1 2026</span>
         <span class="preview-matrix-badge">⊞ Matrix</span>
@@ -1444,30 +1463,43 @@
         <span style="font-size:17px;font-weight:700;letter-spacing:-.4px;">10xQuery</span>
       </div>
 
+      <!-- Mode heading -->
       <div class="auth-form-header">
-        <h1 class="auth-form-title">Sign in to your workspace</h1>
-        <p class="auth-form-sub">Enter your credentials, or create a new account automatically.</p>
+        <h1 class="auth-form-title" id="authTitle">Welcome back</h1>
+        <p class="auth-form-sub" id="authSub">Sign in to your 10xQuery workspace.</p>
+      </div>
+
+      <!-- Sign In / Create Account tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSignin" onclick="switchAuthMode('signin')">Sign In</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchAuthMode('signup')">Create Account</button>
       </div>
 
       <div class="auth-card">
-        <form onsubmit="event.preventDefault(); handleLogin(event);">
+        <form onsubmit="event.preventDefault(); handleAuth(event);">
           <div class="form-row">
             <label class="field-label" for="email">Work Email</label>
             <input type="email" id="email" class="field-input" placeholder="you@company.com" required autocomplete="email">
           </div>
           <div class="form-row">
-            <label class="field-label" for="password">Password</label>
+            <label class="field-label" for="password" id="passwordLabel">Password</label>
             <input type="password" id="password" class="field-input" placeholder="Min. 8 characters" required autocomplete="current-password">
+          </div>
+          <!-- Confirm password — only shown on sign-up -->
+          <div class="form-row" id="confirmRow" style="display:none;">
+            <label class="field-label" for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" class="field-input" placeholder="Repeat your password" autocomplete="new-password">
           </div>
           <div id="auth-error" class="auth-error-box"></div>
           <button type="submit" id="loginBtn" class="auth-submit-btn">
-            <span id="loginBtnContent">Continue with Email</span>
+            <span id="loginBtnContent">Sign In</span>
           </button>
         </form>
       </div>
 
-      <p class="auth-note">
-        New to 10xQuery? An account is created automatically on first sign-in.<br>
+      <p class="auth-note" id="authNote">
+        Don't have an account?
+        <button onclick="switchAuthMode('signup')" style="background:none;border:none;color:var(--blue);font-size:inherit;cursor:pointer;padding:0;font-family:inherit;font-weight:500;">Create one free</button><br>
         By continuing you agree to our Terms of Service &amp; Privacy Policy.
       </p>
 
@@ -2292,9 +2324,45 @@
   }
 
   /* ─────────────────────────────────────────────────
-     AUTH
+     AUTH  — explicit Sign In / Create Account modes
   ───────────────────────────────────────────────── */
-    async function handleLogin(e) {
+  let authMode = 'signin';
+
+  function switchAuthMode(mode) {
+    authMode = mode;
+    const isSignup = mode === 'signup';
+
+    // Tab active state
+    document.getElementById('tabSignin').classList.toggle('active', !isSignup);
+    document.getElementById('tabSignup').classList.toggle('active',  isSignup);
+
+    // Heading + subtitle
+    document.getElementById('authTitle').textContent = isSignup ? 'Create your account' : 'Welcome back';
+    document.getElementById('authSub').textContent   = isSignup
+      ? 'Start collecting enterprise-grade survey data in minutes.'
+      : 'Sign in to your 10xQuery workspace.';
+
+    // Show/hide confirm password field
+    document.getElementById('confirmRow').style.display = isSignup ? '' : 'none';
+    const confirmEl = document.getElementById('confirmPassword');
+    if (confirmEl) confirmEl.required = isSignup;
+
+    // Button text
+    document.getElementById('loginBtnContent').textContent = isSignup ? 'Create Account' : 'Sign In';
+
+    // Note text
+    document.getElementById('authNote').innerHTML = isSignup
+      ? `Already have an account? <button onclick="switchAuthMode('signin')" style="background:none;border:none;color:var(--blue);font-size:inherit;cursor:pointer;padding:0;font-family:inherit;font-weight:500;">Sign in</button><br>By continuing you agree to our Terms of Service &amp; Privacy Policy.`
+      : `Don't have an account? <button onclick="switchAuthMode('signup')" style="background:none;border:none;color:var(--blue);font-size:inherit;cursor:pointer;padding:0;font-family:inherit;font-weight:500;">Create one free</button><br>By continuing you agree to our Terms of Service &amp; Privacy Policy.`;
+
+    // Clear errors and reset form fields
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('password').value = '';
+    if (confirmEl) confirmEl.value = '';
+    setTimeout(() => document.getElementById('email').focus(), 50);
+  }
+
+  async function handleAuth(e) {
     const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
     const btn      = document.getElementById('loginBtn');
@@ -2302,42 +2370,61 @@
     const btnCnt   = document.getElementById('loginBtnContent');
       
       btn.disabled = true;
-    btnCnt.innerHTML = '<div class="spinner"></div> Authenticating…';
+    btnCnt.innerHTML = '<div class="spinner"></div>';
     errBox.style.display = 'none';
 
-      try {
-        let res = await fetch(`${API}/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      // Only attempt auto-register if the server returned 404 (user truly doesn't exist).
-      // A 401 means the account exists but the password is wrong — never auto-register in that case.
-      if (res.status === 404) {
-          res = await fetch(`${API}/v1/users`, {
+    try {
+      if (authMode === 'signin') {
+        // ── Sign In ──────────────────────────────
+        const res  = await fetch(`${API}/v1/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ email, password }),
-          });
-        }
-        
+        });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Authentication failed');
-        
-        currentUser = data.user;
-      window._accessToken = data.accessToken || '';
+        if (!res.ok) {
+          // Give a clear, specific error for each case
+          if (res.status === 404) throw new Error('No account found with that email. Did you mean to create one?');
+          if (res.status === 401) throw new Error('Incorrect password. Please try again.');
+          throw new Error(data.detail || 'Sign-in failed');
+        }
+        currentUser        = data.user;
+        window._accessToken = data.accessToken || '';
+
+      } else {
+        // ── Create Account ───────────────────────
+        const confirm = document.getElementById('confirmPassword')?.value || '';
+        if (password !== confirm) throw new Error('Passwords do not match.');
+        if (password.length < 8)  throw new Error('Password must be at least 8 characters.');
+
+        const res  = await fetch(`${API}/v1/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (res.status === 409) throw new Error('An account with that email already exists. Sign in instead?');
+          throw new Error(data.detail || 'Account creation failed');
+        }
+        currentUser        = data.user;
+        window._accessToken = data.accessToken || '';
+      }
+
       mountApp();
       } catch (err) {
-      errBox.textContent = err.message;
-      errBox.style.display = 'block';
+      errBox.textContent    = err.message;
+      errBox.style.display  = 'block';
       } finally {
         btn.disabled = false;
-      btnCnt.textContent = 'Continue with Email';
+      btnCnt.textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
     }
   }
+
+  // Keep handleLogin as alias so the auto-login flow still works
+  function handleLogin(e) { return handleAuth(e); }
 
   function _dismissVeil() {
     const veil = document.getElementById('init-veil');
@@ -2745,8 +2832,8 @@
 
   function removeOption(qi, oi) {
     editorQs[qi].options.splice(oi, 1);
-    renderQuestions();
-  }
+      renderQuestions();
+    }
 
   function changeSlots(idx, delta) {
     const cur = editorQs[idx].slots || 1;
@@ -2758,8 +2845,8 @@
   function addLogicCond(idx) {
     if (!editorQs[idx].conditions) editorQs[idx].conditions = [];
     editorQs[idx].conditions.push({ targetId: '', operator: 'eq', value: '' });
-    renderQuestions();
-  }
+      renderQuestions();
+    }
   function removeLogicCond(idx, ci) {
     editorQs[idx].conditions.splice(ci, 1);
     renderQuestions();
@@ -2768,7 +2855,7 @@
     if (!editorQs[idx].conditions) return;
     editorQs[idx].conditions[ci][field] = value;
     if (field === 'operator') renderQuestions(); // show/hide value input
-  }
+    }
 
     async function saveDefinition() {
     const btn = document.getElementById('saveBtn');
