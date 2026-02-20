@@ -23,8 +23,8 @@ router = APIRouter(tags=["auth", "users", "sessions"])
 # Environment & configuration
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 DDB_ENDPOINT = os.environ.get("DDB_ENDPOINT") or os.environ.get("DDB_ENDPOINT_URL")
-USER_PROFILES_TABLE = os.environ.get("USER_PROFILES_TABLE", "UserProfiles")
-USER_SESSIONS_TABLE = os.environ.get("USER_SESSIONS_TABLE", "UserSessions")
+USER_PROFILES_TABLE = os.environ.get("USER_PROFILES_TABLE", "10xquery_UserProfiles")
+USER_SESSIONS_TABLE = os.environ.get("USER_SESSIONS_TABLE", "10xquery_UserSessions")
 
 JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-me")
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")

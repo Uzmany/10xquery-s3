@@ -574,6 +574,8 @@
     function closeResults() {
       switchView('editor-view');
     }
+
+    async function handleCreateSurvey(e) {
       e.preventDefault();
       const btn = document.getElementById('createBtn');
       btn.disabled = true;
