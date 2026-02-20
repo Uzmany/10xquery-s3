@@ -208,8 +208,17 @@ def update_survey_meta(survey_id: str, req: SurveyRenameRequest):
 
 @app.get("/v1/surveys/{survey_id}/definition", tags=["surveys"])
 def get_survey_definition(survey_id: str, userId: Optional[str] = None):
-    # Check access before returning definition
-    _check_survey_access(survey_id, userId)
+    # Editors (owner/collaborator) always get access.
+    # Everyone else goes through the standard access check (respects private/allowedUsers).
+    resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "META"})
+    meta = resp.get("Item")
+    if not meta:
+        raise HTTPException(404, "Survey not found")
+    is_editor = userId and (
+        meta.get("ownerId") == userId or userId in meta.get("collaborators", [])
+    )
+    if not is_editor:
+        _check_survey_access(survey_id, userId)
     
     resp = table.get_item(Key={"PK": _pk(survey_id), "SK": "DEFINITION"})
     item = resp.get("Item")
@@ -289,11 +298,19 @@ def submit_response(survey_id: str, req: Request, body: SurveyResponseRequest):
 @app.get("/v1/surveys/{survey_id}/responses", tags=["surveys"])
 def list_responses(survey_id: str, userId: str):
     _ensure_editor(survey_id, userId)
-    resp = table.query(
-        KeyConditionExpression="PK = :pk AND begins_with(SK, :p)",
-        ExpressionAttributeValues={":pk": _pk(survey_id), ":p": "RESP#"}
-    )
-    items = resp.get("Items", [])
+    # Paginate through all pages to avoid silent 1MB truncation
+    items = []
+    kwargs = {
+        "KeyConditionExpression": "PK = :pk AND begins_with(SK, :p)",
+        "ExpressionAttributeValues": {":pk": _pk(survey_id), ":p": "RESP#"},
+    }
+    while True:
+        resp = table.query(**kwargs)
+        items.extend(resp.get("Items", []))
+        last = resp.get("LastEvaluatedKey")
+        if not last:
+            break
+        kwargs["ExclusiveStartKey"] = last
     
     # Simple conversion
     def _decimal_to_native(obj):
@@ -373,15 +390,22 @@ def lookup_user(user_id: str):
 @app.delete("/v1/surveys/{survey_id}", tags=["surveys"])
 def delete_survey(survey_id: str, userId: str):
     _ensure_owner(survey_id, userId)
-    # Batch delete
-    resp = table.query(
-        KeyConditionExpression="PK = :pk",
-        ExpressionAttributeValues={":pk": _pk(survey_id)},
-        ProjectionExpression="PK, SK",
-    )
-    items = resp.get("Items", [])
+    # Paginate to catch all items (avoids silent 1MB truncation)
+    all_items = []
+    kwargs = {
+        "KeyConditionExpression": "PK = :pk",
+        "ExpressionAttributeValues": {":pk": _pk(survey_id)},
+        "ProjectionExpression": "PK, SK",
+    }
+    while True:
+        resp = table.query(**kwargs)
+        all_items.extend(resp.get("Items", []))
+        last = resp.get("LastEvaluatedKey")
+        if not last:
+            break
+        kwargs["ExclusiveStartKey"] = last
     with table.batch_writer() as batch:
-        for item in items:
+        for item in all_items:
             batch.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
     return {"ok": True}
 

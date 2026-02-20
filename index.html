@@ -2153,7 +2153,10 @@
     // Reset nav active to surveys unless caller overrides
     if (['surveys','editor','results'].includes(id)) setNavActive('surveys');
     // topbar
-    const title = { surveys:'Surveys', editor:'Survey Editor', results:'Results' }[id] || '';
+    const title = {
+      surveys: 'Surveys', editor: 'Survey Editor', results: 'Results',
+      analytics: 'Analytics', 'survey-analytics': 'Analytics', settings: 'Settings',
+    }[id] || '';
     document.getElementById('topbarTitle').textContent = title;
     const topbarRight = document.getElementById('topbarRight');
     topbarRight.innerHTML = id === 'surveys'
@@ -2186,8 +2189,9 @@
         body: JSON.stringify({ email, password }),
       });
 
-      // auto-register if login 404/401
-        if (!res.ok) {
+      // Only attempt auto-register if the server returned 404 (user truly doesn't exist).
+      // A 401 means the account exists but the password is wrong — never auto-register in that case.
+      if (res.status === 404) {
           res = await fetch(`${API}/v1/users`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2825,6 +2829,34 @@
   }
 
   /* ─────────────────────────────────────────────────
+     TOKEN REFRESH HELPER
+     Wraps fetch() calls that require a Bearer token.
+     Automatically refreshes the access token if it
+     has expired (server returns 401) and retries once.
+  ───────────────────────────────────────────────── */
+  async function fetchWithAuth(url, options = {}) {
+    const makeRequest = token => fetch(url, {
+      ...options,
+      headers: { ...(options.headers||{}), 'Authorization': `Bearer ${token}` },
+      credentials: 'include',
+    });
+
+    let res = await makeRequest(window._accessToken || '');
+    if (res.status === 401) {
+      // Token expired — try a silent refresh
+      try {
+        const refreshRes = await fetch(`${API}/v1/auth/refresh`, { method: 'POST', credentials: 'include' });
+        if (refreshRes.ok) {
+          const { accessToken } = await refreshRes.json();
+          window._accessToken = accessToken;
+          res = await makeRequest(accessToken);
+        }
+      } catch { /* refresh failed — let the original 401 propagate */ }
+    }
+    return res;
+  }
+
+  /* ─────────────────────────────────────────────────
      SETTINGS
   ───────────────────────────────────────────────── */
   function showSettings() {
@@ -2841,10 +2873,9 @@
   async function saveProfile() {
     const name = document.getElementById('settingsName').value.trim();
     try {
-      const res = await fetch(`${API}/v1/users/me`, {
+      const res = await fetchWithAuth(`${API}/v1/users/me`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window._accessToken||''}` },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ displayName: name }),
       });
       if (!res.ok) throw new Error('Failed to save');
@@ -2865,10 +2896,9 @@
     if (nw !== confirm) { errBox.textContent = 'New passwords do not match.'; errBox.style.display = ''; return; }
     if (nw.length < 8) { errBox.textContent = 'New password must be at least 8 characters.'; errBox.style.display = ''; return; }
     try {
-      const res = await fetch(`${API}/v1/users/me/password`, {
+      const res = await fetchWithAuth(`${API}/v1/users/me/password`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window._accessToken||''}` },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ oldPassword: cur, newPassword: nw }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
@@ -2894,11 +2924,15 @@
   function renderAnalyticsOverview() {
     if (!allSurveys.length) { loadSurveys().then(renderAnalyticsOverview); return; }
     const days  = parseInt(document.getElementById('analyticsRange')?.value || '30');
-    const since = Date.now() - days * 864e5;
+    const since = new Date(Date.now() - days * 864e5).toISOString();
+
+    // Filter surveys updated within the selected range for the table
+    const recentSurveys = allSurveys.filter(s => (s.lastUpdatedAt || s.createdAt || '') >= since);
 
     const totalSurveys    = allSurveys.length;
     const totalResponses  = allSurveys.reduce((s, sv) => s + (sv.responseCount || 0), 0);
     const activeSurveys   = allSurveys.filter(sv => (sv.responseCount||0) > 0).length;
+    const recentActive    = recentSurveys.filter(sv => (sv.responseCount||0) > 0).length;
     const avgResponses    = totalSurveys ? (totalResponses / totalSurveys).toFixed(1) : '0';
     const maxCount        = Math.max(...allSurveys.map(s => s.responseCount || 0), 1);
 
@@ -2906,12 +2940,15 @@
       ${statCard('Total Surveys',    totalSurveys,   'in your workspace',     'blue',  '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>')}
       ${statCard('Total Responses',  totalResponses, 'across all surveys',    'green', '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>')}
       ${statCard('Active Surveys',   activeSurveys,  'with ≥ 1 response',     'violet','<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>')}
-      ${statCard('Avg per Survey',   avgResponses,   'responses / survey',    'amber', '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>')}
+      ${statCard('Active in Period',  recentActive,   `surveys updated in ${days}d`, 'amber', '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>')}
     `;
 
-    document.getElementById('analyticsSurveyCount').textContent = totalSurveys;
+    document.getElementById('analyticsSurveyCount').textContent =
+      recentSurveys.length < totalSurveys
+        ? `${recentSurveys.length} active in period · ${totalSurveys} total`
+        : totalSurveys;
 
-    const sorted = [...allSurveys].sort((a,b) => (b.responseCount||0) - (a.responseCount||0));
+    const sorted = [...allSurveys].sort((a,b) => (b.lastUpdatedAt||b.createdAt||'') > (a.lastUpdatedAt||a.createdAt||'') ? 1 : -1).reverse();
     document.getElementById('analytics-table-body').innerHTML = sorted.map(s => {
       const count = s.responseCount || 0;
       const pct   = Math.round((count / maxCount) * 100);
@@ -3164,10 +3201,11 @@
   }
 
   async function _saveCollaborators(list) {
+    const prevCount = currentCollaborators.length;
     try {
       const res = await fetch(`${API}/v1/surveys/${currentSrvId}/collaborators`, {
         method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ userId: currentUser.userId, collaborators: list }),
       });
@@ -3177,7 +3215,7 @@
       if (sv) sv.collaborators = list;
       _updateCollabHeaderBtn();
       await _renderCollabModal();
-      showToast(list.length > currentCollaborators.length - 1 ? 'Collaborator added' : 'Collaborator removed');
+      showToast(list.length > prevCount ? 'Collaborator added' : 'Collaborator removed');
     } catch { showToast('Failed to update collaborators', 'err'); }
   }
 

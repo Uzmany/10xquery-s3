@@ -351,11 +351,12 @@ def create_user(req: SignUpRequest, request: Request, response: Response):
 def login(req: LoginRequest, request: Request, response: Response):
     profile = _get_profile_by_email(req.email)
     if not profile or not profile.get("passwordHash"):
-        raise HTTPException(401, "Invalid credentials")
+        # 404 so the frontend can distinguish "no account" from "wrong password"
+        raise HTTPException(404, "No account found with that email")
     try:
         password_hasher.verify(profile["passwordHash"], req.password)
     except Exception:
-        raise HTTPException(401, "Invalid credentials")
+        raise HTTPException(401, "Incorrect password")
 
     user_id = profile["userId"]
     _create_session(user_id, response, request)
