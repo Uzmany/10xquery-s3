@@ -13,59 +13,101 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* backgrounds */
-      --bg:          #060A14;
-      --surface-1:   #0C1526;
-      --surface-2:   #111D34;
-      --surface-3:   #17253E;
-      --surface-4:   #1C2C48;
+      /* ── backgrounds: off-white with a soft sage-green tint ── */
+      --bg:          #F0F5F1;
+      --surface-1:   #E7EEE9;
+      --surface-2:   #DDE6DF;
+      --surface-3:   #D1DCD4;
+      --surface-4:   #C4D1C7;
 
-      /* borders */
-      --bd:          rgba(148,163,184,.07);
-      --bd-2:        rgba(148,163,184,.12);
-      --bd-3:        rgba(148,163,184,.20);
+      /* ── borders ── */
+      --bd:          rgba(25, 60, 35, 0.09);
+      --bd-2:        rgba(25, 60, 35, 0.15);
+      --bd-3:        rgba(25, 60, 35, 0.24);
 
-      /* brand */
-      --blue:        #3B82F6;
-      --blue-dark:   #2563EB;
-      --blue-dim:    rgba(59,130,246,.10);
-      --blue-glow:   rgba(59,130,246,.18);
-      --violet:      #8B5CF6;
-      --violet-dim:  rgba(139,92,246,.10);
+      /* ── primary: deep forest green ── */
+      --blue:        #2E7D52;
+      --blue-dark:   #236040;
+      --blue-dim:    rgba(46, 125, 82, 0.11);
+      --blue-glow:   rgba(46, 125, 82, 0.20);
+      --violet:      #6D4EE0;
+      --violet-dim:  rgba(109, 78, 224, 0.10);
 
-      /* semantic */
-      --green:       #10B981;
-      --green-dim:   rgba(16,185,129,.10);
-      --red:         #EF4444;
-      --red-dim:     rgba(239,68,68,.10);
-      --amber:       #F59E0B;
-      --amber-dim:   rgba(245,158,11,.10);
+      /* ── semantic ── */
+      --green:       #15803D;
+      --green-dim:   rgba(21, 128, 61, 0.10);
+      --red:         #C0392B;
+      --red-dim:     rgba(192, 57, 43, 0.09);
+      --amber:       #B45309;
+      --amber-dim:   rgba(180, 83, 9, 0.09);
 
-      /* text */
-      --t1:   #F0F6FF;
-      --t2:   #94A3B8;
-      --t3:   #475569;
-      --t4:   #2D3F57;
+      /* ── text ── */
+      --t1:   #1B2B1F;
+      --t2:   #4A6252;
+      --t3:   #7D9884;
+      --t4:   #ADBEAF;
 
-      /* geometry */
+      /* ── geometry ── */
       --r:    8px;
       --r-lg: 12px;
       --r-xl: 16px;
       --sidebar: 248px;
       --topbar: 60px;
 
-      /* motion */
+      /* ── motion ── */
       --ease: cubic-bezier(.4,0,.2,1);
       --t-fast: 120ms;
       --t-mid:  200ms;
 
-      /* shadow */
-      --shadow-sm: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
-      --shadow-lg: 0 12px 40px rgba(0,0,0,.55);
-      --shadow-xl: 0 24px 64px rgba(0,0,0,.65);
+      /* ── shadows (lighter for light mode) ── */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.07);
+      --shadow-lg: 0 4px 16px rgba(0,0,0,.09), 0 1px 4px rgba(0,0,0,.05);
+      --shadow-xl: 0 10px 32px rgba(0,0,0,.10), 0 3px 8px rgba(0,0,0,.06);
+
+      /* ── mode-specific composite tokens ── */
+      --topbar-bg:   rgba(240, 245, 241, 0.92);
+      --auth-mesh-1: rgba(46, 125, 82, 0.09);
+      --auth-mesh-2: rgba(109, 78, 224, 0.07);
+      --auth-grid:   rgba(25, 60, 35, 0.05);
     }
 
-    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: antialiased; }
+    /* ── Dark mode overrides ── */
+    html.dark {
+      --bg:          #060A14;
+      --surface-1:   #0C1526;
+      --surface-2:   #111D34;
+      --surface-3:   #17253E;
+      --surface-4:   #1C2C48;
+      --bd:          rgba(148,163,184,.07);
+      --bd-2:        rgba(148,163,184,.12);
+      --bd-3:        rgba(148,163,184,.20);
+      --blue:        #3B82F6;
+      --blue-dark:   #2563EB;
+      --blue-dim:    rgba(59,130,246,.10);
+      --blue-glow:   rgba(59,130,246,.18);
+      --violet:      #8B5CF6;
+      --violet-dim:  rgba(139,92,246,.10);
+      --green:       #10B981;
+      --green-dim:   rgba(16,185,129,.10);
+      --red:         #EF4444;
+      --red-dim:     rgba(239,68,68,.10);
+      --amber:       #F59E0B;
+      --amber-dim:   rgba(245,158,11,.10);
+      --t1:          #F0F6FF;
+      --t2:          #94A3B8;
+      --t3:          #475569;
+      --t4:          #2D3F57;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+      --shadow-lg:   0 12px 40px rgba(0,0,0,.55);
+      --shadow-xl:   0 24px 64px rgba(0,0,0,.65);
+      --topbar-bg:   rgba(6, 10, 20, 0.85);
+      --auth-mesh-1: rgba(59,130,246,.12);
+      --auth-mesh-2: rgba(139,92,246,.10);
+      --auth-grid:   rgba(148,163,184,.04);
+    }
+
+    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: auto; }
+    html.dark { -webkit-font-smoothing: antialiased; }
     body { min-height: 100vh; }
     button, input, textarea, select { font-family: inherit; }
     button { cursor: pointer; }
@@ -161,7 +203,7 @@
     .btn-danger {
       background: transparent; color: var(--t2); border-color: var(--bd-2);
     }
-    .btn-danger:hover:not(:disabled) { background: var(--red-dim); color: var(--red); border-color: rgba(239,68,68,.25); }
+    .btn-danger:hover:not(:disabled) { background: var(--red-dim); color: var(--red); border-color: var(--bd-2); }
 
     .icon-btn {
       width: 30px; height: 30px; flex-shrink: 0;
@@ -170,7 +212,7 @@
       background: transparent; color: var(--t2);
       transition: all var(--t-fast) var(--ease);
     }
-    .icon-btn:hover { background: var(--blue-dim); border-color: rgba(59,130,246,.25); color: var(--blue); }
+    .icon-btn:hover { background: var(--blue-dim); border-color: var(--bd-2); color: var(--blue); }
 
     /* ─────────────────────────────────────────────────
        BADGES
@@ -180,10 +222,10 @@
       padding: 3px 8px; border-radius: 20px;
       font-size: 10.5px; font-weight: 600; letter-spacing: .03em; white-space: nowrap;
     }
-    .badge-blue   { background: var(--blue-dim);   color: #60A5FA; border: 1px solid rgba(59,130,246,.2); }
-    .badge-red    { background: var(--red-dim);    color: #F87171; border: 1px solid rgba(239,68,68,.2); }
-    .badge-violet { background: var(--violet-dim); color: #A78BFA; border: 1px solid rgba(139,92,246,.2); }
-    .badge-green  { background: var(--green-dim);  color: #34D399; border: 1px solid rgba(16,185,129,.2); }
+    .badge-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--bd-2); }
+    .badge-red    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--bd-2); }
+    .badge-violet { background: var(--violet-dim); color: var(--violet); border: 1px solid var(--bd-2); }
+    .badge-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--bd-2); }
 
     /* ─────────────────────────────────────────────────
        AUTH PAGE
@@ -215,8 +257,8 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(59,130,246,.12) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 80% 80%, rgba(139,92,246,.10) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 50% at 20% 20%, var(--auth-mesh-1) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 80%, var(--auth-mesh-2) 0%, transparent 70%);
     }
     /* subtle grid */
     .auth-panel-left::after {
@@ -224,8 +266,8 @@
       position: absolute;
       inset: 0;
       background-image:
-        linear-gradient(rgba(148,163,184,.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(148,163,184,.04) 1px, transparent 1px);
+        linear-gradient(var(--auth-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--auth-grid) 1px, transparent 1px);
       background-size: 48px 48px;
     }
 
@@ -429,7 +471,7 @@
     .nav-link:hover svg { color: var(--t2); }
     .nav-link.active {
       background: var(--blue-dim); color: var(--blue);
-      border-color: rgba(59,130,246,.15);
+      border-color: var(--blue-dim);
     }
     .nav-link.active svg { color: var(--blue); }
     .nav-link.coming-soon { opacity: .4; cursor: default; pointer-events: none; }
@@ -484,7 +526,7 @@
     /* ── TOPBAR ── */
     .topbar {
       height: var(--topbar);
-      background: rgba(6,10,20,.85);
+      background: var(--topbar-bg);
       backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--bd);
       padding: 0 28px;
@@ -610,7 +652,7 @@
     /* glow on hover uses JS mouse tracking */
     .survey-card-glow {
       position: absolute; inset: 0;
-      background: radial-gradient(400px circle at var(--mx,50%) var(--my,50%), rgba(59,130,246,.06), transparent 60%);
+      background: radial-gradient(400px circle at var(--mx,50%) var(--my,50%), var(--blue-dim), transparent 60%);
       pointer-events: none; border-radius: var(--r-lg);
       opacity: 0; transition: opacity var(--t-mid);
     }
@@ -979,6 +1021,32 @@
     }
     .toast-dot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
     .toast-dot.err { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+    /* ── Theme toggle ── */
+    .theme-toggle-wrap { padding: 8px 10px 4px; }
+    .theme-toggle {
+      display: flex; align-items: center; gap: 9px;
+      width: 100%; padding: 8px 10px;
+      border-radius: 8px; border: 1px solid var(--bd-2);
+      background: var(--surface-2); color: var(--t2);
+      font-size: 12.5px; font-weight: 500;
+      cursor: pointer; transition: all var(--t-fast) var(--ease);
+    }
+    .theme-toggle:hover { background: var(--surface-3); color: var(--t1); border-color: var(--bd-3); }
+
+    /* floating toggle on auth page */
+    .auth-theme-btn {
+      position: fixed; top: 16px; right: 16px; z-index: 50;
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px;
+      background: var(--surface-1); border: 1px solid var(--bd-2);
+      border-radius: 20px; color: var(--t2); font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: all var(--t-fast) var(--ease);
+      box-shadow: var(--shadow-sm);
+    }
+    .auth-theme-btn:hover { background: var(--surface-2); color: var(--t1); }
+
+    html { transition: background-color 200ms var(--ease), color 200ms var(--ease); }
   </style>
 </head>
 <body>
@@ -1009,8 +1077,8 @@
 
       <div class="feature-list">
         <div class="feature-item">
-          <div class="feature-icon" style="background:var(--blue-dim);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div class="feature-icon" style="background:var(--blue-dim);color:var(--blue);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
           <div class="feature-text">
             <strong>Private surveys with user-level access control</strong>
@@ -1018,8 +1086,8 @@
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon" style="background:var(--violet-dim);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <div class="feature-icon" style="background:var(--violet-dim);color:var(--violet);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           </div>
           <div class="feature-text">
             <strong>Rich question types</strong>
@@ -1027,8 +1095,8 @@
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon" style="background:var(--green-dim);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <div class="feature-icon" style="background:var(--green-dim);color:var(--green);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </div>
           <div class="feature-text">
             <strong>Real-time response analytics</strong>
@@ -1036,8 +1104,8 @@
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon" style="background:var(--amber-dim);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div class="feature-icon" style="background:var(--amber-dim);color:var(--amber);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           </div>
           <div class="feature-text">
             <strong>Zero infrastructure required</strong>
@@ -1096,6 +1164,19 @@
 
     </div>
   </div>
+  <!-- floating theme toggle on auth page -->
+  <button class="auth-theme-btn" onclick="toggleTheme()" id="authThemeBtn">
+    <svg id="authIconMoon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg id="authIconSun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+    <span id="authThemeLabel">Dark mode</span>
+  </button>
 </div><!-- /auth-page -->
 
 
@@ -1165,6 +1246,21 @@
       </div>
     </div>
 
+    <div class="theme-toggle-wrap">
+      <button class="theme-toggle" onclick="toggleTheme()" id="sidebarThemeBtn">
+        <svg id="sidebarIconMoon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="sidebarIconSun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <span id="sidebarThemeLabel">Dark mode</span>
+      </button>
+    </div>
+
     <div class="sidebar-user">
       <div class="user-tile">
         <div class="avatar" id="userAvatar">?</div>
@@ -1214,8 +1310,8 @@
         <div class="stat-card blue">
           <div class="stat-row-top">
             <span class="stat-label-text">Total Surveys</span>
-            <div class="stat-icon" style="background:var(--blue-dim);">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2">
+            <div class="stat-icon" style="background:var(--blue-dim);color:var(--blue);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                 <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
               </svg>
@@ -1228,8 +1324,8 @@
         <div class="stat-card green">
           <div class="stat-row-top">
             <span class="stat-label-text">Public</span>
-            <div class="stat-icon" style="background:var(--green-dim);">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2">
+            <div class="stat-icon" style="background:var(--green-dim);color:var(--green);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
               </svg>
         </div>
@@ -1241,8 +1337,8 @@
         <div class="stat-card red">
           <div class="stat-row-top">
             <span class="stat-label-text">Private</span>
-            <div class="stat-icon" style="background:var(--red-dim);">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2">
+            <div class="stat-icon" style="background:var(--red-dim);color:var(--red);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
               </svg>
             </div>
@@ -1254,8 +1350,8 @@
         <div class="stat-card violet">
           <div class="stat-row-top">
             <span class="stat-label-text">Your User ID</span>
-            <div class="stat-icon" style="background:var(--violet-dim);">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2">
+            <div class="stat-icon" style="background:var(--violet-dim);color:var(--violet);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
             </div>
@@ -1479,6 +1575,40 @@
   /* ─────────────────────────────────────────────────
      CONFIG
   ───────────────────────────────────────────────── */
+  /* ─────────────────────────────────────────────────
+     THEME
+  ───────────────────────────────────────────────── */
+  function applyTheme(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    // Auth page toggle
+    const aM = document.getElementById('authIconMoon');
+    const aS = document.getElementById('authIconSun');
+    const aL = document.getElementById('authThemeLabel');
+    if (aM) aM.style.display = dark ? 'none' : '';
+    if (aS) aS.style.display = dark ? '' : 'none';
+    if (aL) aL.textContent   = dark ? 'Light mode' : 'Dark mode';
+    // Sidebar toggle
+    const sM = document.getElementById('sidebarIconMoon');
+    const sS = document.getElementById('sidebarIconSun');
+    const sL = document.getElementById('sidebarThemeLabel');
+    if (sM) sM.style.display = dark ? 'none' : '';
+    if (sS) sS.style.display = dark ? '' : 'none';
+    if (sL) sL.textContent   = dark ? 'Light mode' : 'Dark mode';
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    localStorage.setItem('10xq-theme', isDark ? 'light' : 'dark');
+    applyTheme(!isDark);
+  }
+
+  // Init on load — light is default, dark only if explicitly saved
+  (function() {
+    if (localStorage.getItem('10xq-theme') === 'dark') applyTheme(true);
+  })();
+
+  /* ───────────────────────────────────────────────── */
+
   const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
     : 'https://api.10xquery.com';

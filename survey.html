@@ -13,6 +13,37 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
+      --bg:         #F0F5F1;
+      --surface-1:  #E7EEE9;
+      --surface-2:  #DDE6DF;
+      --surface-3:  #D1DCD4;
+      --bd:         rgba(25, 60, 35, 0.09);
+      --bd-2:       rgba(25, 60, 35, 0.15);
+      --bd-3:       rgba(25, 60, 35, 0.24);
+      --blue:       #2E7D52;
+      --blue-dark:  #236040;
+      --blue-dim:   rgba(46, 125, 82, 0.11);
+      --blue-glow:  rgba(46, 125, 82, 0.20);
+      --violet:     #6D4EE0;
+      --green:      #15803D;
+      --green-dim:  rgba(21, 128, 61, 0.10);
+      --red:        #C0392B;
+      --red-dim:    rgba(192, 57, 43, 0.09);
+      --t1:  #1B2B1F;
+      --t2:  #4A6252;
+      --t3:  #7D9884;
+      --t4:  #ADBEAF;
+      --r:   8px;
+      --r-lg: 12px;
+      --r-xl: 16px;
+      --ease: cubic-bezier(.4,0,.2,1);
+      --t-fast: 120ms;
+      --t-mid:  200ms;
+      --shadow-lg: 0 4px 16px rgba(0,0,0,.09), 0 1px 4px rgba(0,0,0,.05);
+      --nav-bg: rgba(240, 245, 241, 0.92);
+    }
+
+    html.dark {
       --bg:         #060A14;
       --surface-1:  #0C1526;
       --surface-2:  #111D34;
@@ -29,20 +60,16 @@
       --green-dim:  rgba(16,185,129,.10);
       --red:        #EF4444;
       --red-dim:    rgba(239,68,68,.10);
-      --t1:  #F0F6FF;
-      --t2:  #94A3B8;
-      --t3:  #475569;
-      --t4:  #2D3F57;
-      --r:   8px;
-      --r-lg: 12px;
-      --r-xl: 16px;
-      --ease: cubic-bezier(.4,0,.2,1);
-      --t-fast: 120ms;
-      --t-mid:  200ms;
-      --shadow-lg: 0 12px 40px rgba(0,0,0,.55);
+      --t1:         #F0F6FF;
+      --t2:         #94A3B8;
+      --t3:         #475569;
+      --t4:         #2D3F57;
+      --shadow-lg:  0 12px 40px rgba(0,0,0,.55);
+      --nav-bg:     rgba(6, 10, 20, 0.85);
     }
 
-    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: antialiased; }
+    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: auto; transition: background-color 200ms, color 200ms; }
+    html.dark { -webkit-font-smoothing: antialiased; }
     body { min-height: 100vh; display: flex; flex-direction: column; }
     button, input, textarea, select { font-family: inherit; cursor: pointer; }
     ::-webkit-scrollbar { width: 5px; }
@@ -64,7 +91,7 @@
     .nav {
       height: 56px; flex-shrink: 0;
       border-bottom: 1px solid var(--bd);
-      background: rgba(6,10,20,.85);
+      background: var(--nav-bg);
       backdrop-filter: blur(16px);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 28px;
@@ -82,6 +109,14 @@
     }
     .nav-name { font-size: 14.5px; font-weight: 700; letter-spacing: -.3px; color: var(--t1); }
     .nav-right { font-size: 12px; color: var(--t3); }
+    .nav-theme-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 11px;
+      background: var(--surface-2); border: 1px solid var(--bd-2);
+      border-radius: 20px; color: var(--t2); font-size: 11.5px; font-weight: 500;
+      cursor: pointer; transition: all var(--t-fast) var(--ease);
+    }
+    .nav-theme-btn:hover { background: var(--surface-3); color: var(--t1); }
 
     /* ─────────────────────────────────────────────────
        LAYOUT
@@ -138,7 +173,7 @@
     }
     .choice-item:hover { border-color: var(--bd-2); background: var(--surface-3); }
     .choice-item:has(input:checked) {
-      border-color: rgba(59,130,246,.35);
+      border-color: var(--blue);
       background: var(--blue-dim);
     }
     .choice-item input[type="radio"],
@@ -215,7 +250,7 @@
     }
     .q-num-badge {
       width: 22px; height: 22px; flex-shrink: 0;
-      background: var(--blue-dim); border: 1px solid rgba(59,130,246,.2);
+      background: var(--blue-dim); border: 1px solid var(--bd-2);
       border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 600; color: var(--blue);
@@ -354,7 +389,17 @@
       </div>
       <span class="nav-name">10xQuery</span>
     </a>
-    <span class="nav-right">Powered by 10xQuery Enterprise</span>
+    <button class="nav-theme-btn" onclick="toggleTheme()" id="navThemeBtn">
+      <svg id="navIconMoon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg id="navIconSun" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      </svg>
+      <span id="navThemeLabel">Dark mode</span>
+    </button>
   </nav>
 
   <main class="main">
@@ -458,6 +503,25 @@
   </main>
 
   <script>
+    /* ── Theme ── */
+    function applyTheme(dark) {
+      document.documentElement.classList.toggle('dark', dark);
+      const m = document.getElementById('navIconMoon');
+      const s = document.getElementById('navIconSun');
+      const l = document.getElementById('navThemeLabel');
+      if (m) m.style.display = dark ? 'none' : '';
+      if (s) s.style.display = dark ? '' : 'none';
+      if (l) l.textContent   = dark ? 'Light mode' : 'Dark mode';
+    }
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('10xq-theme', isDark ? 'light' : 'dark');
+      applyTheme(!isDark);
+    }
+    (function() {
+      if (localStorage.getItem('10xq-theme') === 'dark') applyTheme(true);
+    })();
+
     const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
       ? 'http://localhost:8000'
       : 'https://api.10xquery.com';
