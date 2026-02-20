@@ -1577,6 +1577,16 @@
           <p id="editorId" style="font-size:11.5px;color:var(--t3);font-family:monospace;"></p>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-ghost" onclick="openCollabModal()" id="collabHeaderBtn" title="Manage collaborators">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span id="collabHeaderCount"></span>
+            Collaborators
+          </button>
           <button class="btn btn-ghost" onclick="viewResults()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -1688,20 +1698,6 @@
       </div>
 
           <div class="e-panel">
-            <div class="e-panel-head">Collaborators</div>
-            <div class="e-panel-body" style="gap:10px;">
-              <p style="font-size:11.5px;color:var(--t2);line-height:1.55;">
-                Collaborators can view and edit this survey's questions and responses. Only the owner can manage collaborators.
-              </p>
-              <div id="collabList"></div>
-              <div class="collab-add-row" id="collabAddRow">
-                <input type="text" id="collabInput" class="collab-add-input" placeholder="8-digit user ID" maxlength="8" inputmode="numeric" pattern="[0-9]{8}">
-                <button class="btn btn-primary btn-sm" onclick="addCollaborator()">Add</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="e-panel">
             <div class="e-panel-head">Question Types</div>
             <div class="e-panel-body">
               <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
@@ -1802,18 +1798,18 @@
       </div>
       <div class="analytics-survey-table">
         <table>
-          <thead>
+            <thead>
             <tr>
               <th>Survey</th>
               <th>Visibility</th>
               <th>Total Responses</th>
               <th>Response volume</th>
               <th>Last Updated</th>
-            </tr>
-          </thead>
+              </tr>
+            </thead>
           <tbody id="analytics-table-body"></tbody>
-        </table>
-      </div>
+          </table>
+        </div>
     </div><!-- /page-analytics -->
 
 
@@ -1832,8 +1828,8 @@
             <h1 id="surveyAnalyticsTitle" style="font-size:18px;margin-bottom:0;">Analytics</h1>
           </div>
           <p style="font-size:13px;color:var(--t2);" id="surveyAnalyticsSubtitle">Loading…</p>
-        </div>
       </div>
+    </div>
 
       <div class="analytics-stats" id="survey-analytics-stats"></div>
 
@@ -1842,8 +1838,8 @@
         <div class="chart-wrap">
           <canvas id="surveyChart"></canvas>
         </div>
-      </div>
-
+        </div>
+        
       <div class="section-bar" style="margin-bottom:14px;">
         <span class="section-bar-title">Recent Responses</span>
         <span class="section-bar-count" id="surveyAnalyticsRespCount">—</span>
@@ -1864,7 +1860,7 @@
           <h1>Settings</h1>
           <p>Manage your profile, security, and workspace preferences.</p>
         </div>
-      </div>
+        </div>
 
       <div style="max-width:600px;">
         <!-- Profile -->
@@ -1980,7 +1976,7 @@
       </button>
     </div>
     </div>
-  </div>
+        </div>
 
 <!-- Edit Response Modal -->
 <div id="editRespModal" class="overlay">
@@ -2002,6 +1998,55 @@
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeEditResp()">Cancel</button>
       <button class="btn btn-primary" id="saveRespBtn" onclick="saveEditedResponse()">Save Changes</button>
+    </div>
+  </div>
+        </div>
+
+<!-- Collaborators Modal -->
+<div id="collabModal" class="overlay">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div>
+        <span class="modal-head-title">Collaborators</span>
+        <div style="font-size:12px;color:var(--t2);margin-top:3px;" id="collabModalSurveyName"></div>
+        </div>
+      <button class="modal-close" onclick="closeCollabModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:20px 24px;">
+      <!-- People list -->
+      <div id="collabModalList" style="margin-bottom:16px;"></div>
+
+      <!-- Add collaborator — only shown for owner -->
+      <div id="collabModalAddSection">
+        <div style="font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
+          Add collaborator
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:6px;">
+          <input type="text" id="collabModalInput" class="field-input"
+            style="font-family:monospace;letter-spacing:.08em;flex:1;"
+            placeholder="8-digit user ID" maxlength="8" inputmode="numeric"
+            onkeydown="if(event.key==='Enter')addCollaborator()">
+          <button class="btn btn-primary" id="collabModalAddBtn" onclick="addCollaborator()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add
+          </button>
+        </div>
+        <p style="font-size:11.5px;color:var(--t3);line-height:1.6;">
+          Collaborators can edit questions and view responses, but cannot delete the survey or manage collaborators.
+          Share your User ID from the dashboard so others can find you.
+        </p>
+    </div>
+  </div>
+
+    <div class="modal-foot" style="justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeCollabModal()">Done</button>
     </div>
   </div>
 </div>
@@ -2361,12 +2406,12 @@
       if (cb) cb.checked = editorAllowCustomRows;
       renderRowLabels();
       if (!editorQs.length) editorQs = [{ id: 'q1', type: 'text', title: 'Your first question', slots: 1 }];
-      renderQuestions();
+        renderQuestions();
       loadCollaborators(id);
     } catch {
       list.innerHTML = `<div style="color:var(--red);text-align:center;padding:40px;">Failed to load questions.</div>`;
+      }
     }
-  }
 
     function closeEditor() {
     currentSrvId = null; editorQs = [];
@@ -2966,11 +3011,11 @@
                 ? rowLabels.map(k => `${k}: ${fmtVal(ans[k])}`).join(' | ')
                 : fmtVal(ans);
             return `<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(txt)}">${esc(txt)}</td>`;
-          }).join('');
+        }).join('');
           return `<tr><td style="color:var(--t2);white-space:nowrap;">${t}</td><td style="font-family:monospace;color:var(--blue);">${esc(r.responderId||'Anonymous')}</td>${cells}</tr>`;
         }).join('') || `<tr><td colspan="100" style="text-align:center;padding:40px;color:var(--t2);">No responses yet.</td></tr>`;
-
-    } catch (e) {
+        
+      } catch (e) {
       document.getElementById('surveyAnalyticsSubtitle').textContent = 'Failed to load';
     }
   }
@@ -2998,23 +3043,46 @@
   ───────────────────────────────────────────────── */
   let currentCollaborators = [];
 
-  async function loadCollaborators(surveyId) {
+  // Called when opening the editor — just syncs the local cache
+  function loadCollaborators(surveyId) {
     const survey = allSurveys.find(s => s.surveyId === surveyId);
-    currentCollaborators = survey?.collaborators || [];
-    await renderCollaborators();
-    // Hide add-row if current user is not the owner
-    const addRow = document.getElementById('collabAddRow');
-    if (addRow) addRow.style.display = survey?.ownerId === currentUser?.userId ? '' : 'none';
+    currentCollaborators = (survey?.collaborators || []).slice();
+    _updateCollabHeaderBtn();
   }
 
-  async function renderCollaborators() {
+  function _updateCollabHeaderBtn() {
+    const cnt = document.getElementById('collabHeaderCount');
+    if (!cnt) return;
+    cnt.textContent = currentCollaborators.length > 0 ? `${currentCollaborators.length} · ` : '';
+  }
+
+  /* Open the modal */
+  async function openCollabModal() {
     const survey = allSurveys.find(s => s.surveyId === currentSrvId);
-    const owner  = survey?.ownerId || '';
-    const list   = document.getElementById('collabList');
+    document.getElementById('collabModalSurveyName').textContent = survey?.title || '';
+    document.getElementById('collabModal').classList.add('open');
+    // Show/hide add section based on ownership
+    const isOwner = survey?.ownerId === currentUser?.userId;
+    document.getElementById('collabModalAddSection').style.display = isOwner ? '' : 'none';
+    await _renderCollabModal();
+    if (isOwner) setTimeout(() => document.getElementById('collabModalInput')?.focus(), 80);
+  }
+
+  function closeCollabModal() {
+    document.getElementById('collabModal').classList.remove('open');
+    document.getElementById('collabModalInput').value = '';
+  }
+
+  async function _renderCollabModal() {
+    const survey = allSurveys.find(s => s.surveyId === currentSrvId);
+    const owner  = survey?.ownerId || currentUser?.userId || '';
+    const list   = document.getElementById('collabModalList');
     if (!list) return;
 
+    list.innerHTML = `<div style="color:var(--t2);font-size:13px;padding:12px 0;">Loading…</div>`;
+
     // Fetch display names for owner + collaborators
-    const ids = [owner, ...currentCollaborators].filter(Boolean);
+    const ids   = [...new Set([owner, ...currentCollaborators])].filter(Boolean);
     const names = {};
     await Promise.all(ids.map(async id => {
       try {
@@ -3024,40 +3092,45 @@
       } catch { names[id] = id; }
     }));
 
-    const items = [
+    const isOwner = owner === currentUser?.userId;
+    const people  = [
       { id: owner, role: 'owner', name: names[owner] || owner },
-      ...currentCollaborators.map(id => ({ id, role: 'collab', name: names[id] || id }))
+      ...currentCollaborators.map(id => ({ id, role: 'collab', name: names[id] || id })),
     ];
 
-    list.innerHTML = items.map(({ id, role, name }) => `
-      <div class="collab-item">
-        <div class="collab-avatar">${(name||'?')[0].toUpperCase()}</div>
-        <div class="collab-info">
-          <div class="collab-name">${esc(name)}</div>
-          <div class="collab-id">${id}</div>
-        </div>
-        ${role === 'owner'
-          ? `<span class="collab-owner-tag">Owner</span>`
-          : owner === currentUser?.userId
-            ? `<button class="icon-btn" onclick="removeCollaborator('${id}')" title="Remove collaborator" style="color:var(--red);border-color:transparent;">
-                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-               </button>`
-            : ''}
-      </div>`).join('');
+    list.innerHTML = people.length === 0
+      ? `<p style="color:var(--t3);font-size:13px;">No collaborators yet.</p>`
+      : people.map(({ id, role, name }) => `
+        <div class="collab-item">
+          <div class="collab-avatar">${(name||'?')[0].toUpperCase()}</div>
+          <div class="collab-info">
+            <div class="collab-name">${esc(name)}${id === currentUser?.userId ? ' <span style="color:var(--t3);font-size:11px;">(you)</span>' : ''}</div>
+            <div class="collab-id">${id}</div>
+          </div>
+          ${role === 'owner'
+            ? `<span class="collab-owner-tag">Owner</span>`
+            : isOwner
+              ? `<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--bd-2);"
+                   onclick="removeCollaborator('${id}')">Remove</button>`
+              : ''}
+        </div>`).join('');
   }
 
   async function addCollaborator() {
-    const input = document.getElementById('collabInput');
+    const input = document.getElementById('collabModalInput');
     const id    = (input?.value || '').trim();
     if (!id || !/^\d{8}$/.test(id)) { showToast('Enter a valid 8-digit user ID', 'err'); return; }
-    if (id === currentUser?.userId) { showToast("You can't add yourself", 'err'); return; }
+    if (id === currentUser?.userId)  { showToast("You can't add yourself", 'err'); return; }
     if (currentCollaborators.includes(id)) { showToast('Already a collaborator'); return; }
 
-    // Verify user exists
+    const btn = document.getElementById('collabModalAddBtn');
+    btn.disabled = true; btn.textContent = 'Checking…';
+
     try {
       const check = await fetch(`${API}/v1/users/lookup/${id}`);
-      if (!check.ok) { showToast('User ID not found', 'err'); return; }
+      if (!check.ok) { showToast('User ID not found — ask them to share their ID from Settings', 'err'); return; }
     } catch { showToast('Could not verify user ID', 'err'); return; }
+    finally { btn.disabled = false; btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add`; }
 
     const updated = [...currentCollaborators, id];
     await _saveCollaborators(updated);
@@ -3065,25 +3138,24 @@
   }
 
   async function removeCollaborator(id) {
-    const updated = currentCollaborators.filter(c => c !== id);
-    await _saveCollaborators(updated);
+    await _saveCollaborators(currentCollaborators.filter(c => c !== id));
   }
 
   async function _saveCollaborators(list) {
     try {
       const res = await fetch(`${API}/v1/surveys/${currentSrvId}/collaborators`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ userId: currentUser.userId, collaborators: list }),
       });
       if (!res.ok) throw new Error('Save failed');
       currentCollaborators = list;
-      // Update allSurveys cache
       const sv = allSurveys.find(s => s.surveyId === currentSrvId);
       if (sv) sv.collaborators = list;
-      await renderCollaborators();
-      showToast('Collaborators updated');
+      _updateCollabHeaderBtn();
+      await _renderCollabModal();
+      showToast(list.length > currentCollaborators.length - 1 ? 'Collaborator added' : 'Collaborator removed');
     } catch { showToast('Failed to update collaborators', 'err'); }
   }
 

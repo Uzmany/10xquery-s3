@@ -165,6 +165,7 @@ def list_surveys(userId: str):
             "title": i.get("title"),
             "description": i.get("description"),
             "status": i.get("status"),
+            "ownerId": i.get("ownerId"),
             "visibility": i.get("visibility", "public"),
             "createdAt": i.get("createdAt"),
             "lastUpdatedAt": i.get("lastUpdatedAt"),
