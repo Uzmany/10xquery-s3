@@ -1,615 +1,1914 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>10xQuery - Create and Share Surveys</title>
+  <title>10xQuery — Enterprise Survey Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            background: '#0a0a0a',
-            surface: '#111111',
-            border: '#222222',
-            textMain: '#ededed',
-            textMuted: '#a1a1aa',
-            primary: '#0070f3',
-            primaryHover: '#0051a8'
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #0a0a0a; color: #ededed; -webkit-font-smoothing: antialiased; }
-    
-    .glass-panel {
-      background: rgba(17, 17, 17, 0.7);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid #222222;
+    /* ─────────────────────────────────────────────────
+       RESET & TOKENS
+    ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* backgrounds */
+      --bg:          #060A14;
+      --surface-1:   #0C1526;
+      --surface-2:   #111D34;
+      --surface-3:   #17253E;
+      --surface-4:   #1C2C48;
+
+      /* borders */
+      --bd:          rgba(148,163,184,.07);
+      --bd-2:        rgba(148,163,184,.12);
+      --bd-3:        rgba(148,163,184,.20);
+
+      /* brand */
+      --blue:        #3B82F6;
+      --blue-dark:   #2563EB;
+      --blue-dim:    rgba(59,130,246,.10);
+      --blue-glow:   rgba(59,130,246,.18);
+      --violet:      #8B5CF6;
+      --violet-dim:  rgba(139,92,246,.10);
+
+      /* semantic */
+      --green:       #10B981;
+      --green-dim:   rgba(16,185,129,.10);
+      --red:         #EF4444;
+      --red-dim:     rgba(239,68,68,.10);
+      --amber:       #F59E0B;
+      --amber-dim:   rgba(245,158,11,.10);
+
+      /* text */
+      --t1:   #F0F6FF;
+      --t2:   #94A3B8;
+      --t3:   #475569;
+      --t4:   #2D3F57;
+
+      /* geometry */
+      --r:    8px;
+      --r-lg: 12px;
+      --r-xl: 16px;
+      --sidebar: 248px;
+      --topbar: 60px;
+
+      /* motion */
+      --ease: cubic-bezier(.4,0,.2,1);
+      --t-fast: 120ms;
+      --t-mid:  200ms;
+
+      /* shadow */
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.55);
+      --shadow-xl: 0 24px 64px rgba(0,0,0,.65);
     }
-    
-    .input-field {
-      width: 100%; background: #000; border: 1px solid #333; color: #fff;
-      padding: 12px 16px; border-radius: 8px; outline: none; transition: all 0.2s ease;
-      font-size: 14px;
+
+    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: antialiased; }
+    body { min-height: 100vh; }
+    button, input, textarea, select { font-family: inherit; }
+    button { cursor: pointer; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-4); border-radius: 3px; }
+
+    /* ─────────────────────────────────────────────────
+       UTILITIES
+    ───────────────────────────────────────────────── */
+    .hidden   { display: none !important; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes shimmer { 0%,100% { opacity:.4; } 50% { opacity:.8; } }
+    @keyframes pulse   { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
     }
-    .input-field:focus { border-color: #0070f3; box-shadow: 0 0 0 1px #0070f3; }
-    
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 30%, var(--surface-3) 50%, var(--surface-2) 70%);
+      background-size: 400% 100%;
+      animation: shimmer 1.6s ease infinite;
+      border-radius: 6px;
+    }
+
+    /* ─────────────────────────────────────────────────
+       FORM CONTROLS
+    ───────────────────────────────────────────────── */
+    .field-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--t2);
+      margin-bottom: 6px;
+      letter-spacing: .01em;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--bd-2);
+      color: var(--t1);
+      padding: 10px 13px;
+      border-radius: var(--r);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+      resize: vertical;
+    }
+    .field-input::placeholder { color: var(--t3); }
+    .field-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-glow);
+    }
+
+    /* ─────────────────────────────────────────────────
+       BUTTONS
+    ───────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 7px; padding: 8px 16px;
+      border-radius: var(--r); font-size: 13px; font-weight: 500;
+      border: 1px solid transparent;
+      transition: all var(--t-fast) var(--ease);
+      white-space: nowrap; line-height: 1;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed !important; transform: none !important; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
     .btn-primary {
-      background: #ededed; color: #0a0a0a; border: none; padding: 10px 18px;
-      border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+      background: var(--blue); color: #fff; border-color: var(--blue);
     }
-    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    
-    .btn-secondary {
-      background: #111; border: 1px solid #333; color: #ededed; padding: 10px 18px;
-      border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+    .btn-primary:hover:not(:disabled) {
+      background: var(--blue-dark); border-color: var(--blue-dark);
+      box-shadow: 0 4px 16px var(--blue-glow); transform: translateY(-1px);
     }
-    .btn-secondary:hover { background: #222; border-color: #444; }
+    .btn-primary:active:not(:disabled) { transform: none; box-shadow: none; }
 
-    /* Modal */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    .btn-ghost {
+      background: transparent; color: var(--t2); border-color: var(--bd-2);
     }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content {
-      background: #111; border: 1px solid #333; border-radius: 12px; padding: 32px; width: 100%; max-width: 460px;
-      transform: scale(0.95); transition: transform 0.2s; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    }
-    .modal-overlay.active .modal-content { transform: scale(1); }
-    
-    /* Custom Radio */
-    .radio-group { display: flex; gap: 12px; margin-bottom: 20px; }
-    .radio-label {
-      flex: 1; border: 1px solid #333; border-radius: 8px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; color: #a1a1aa; background: #000;
-    }
-    .radio-label:hover { border-color: #555; }
-    .radio-input:checked + .radio-label { border-color: #0070f3; color: #fff; background: rgba(0, 112, 243, 0.1); }
-    .radio-input { display: none; }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--t1); border-color: var(--bd-3); }
 
-    /* Toast */
+    .btn-danger {
+      background: transparent; color: var(--t2); border-color: var(--bd-2);
+    }
+    .btn-danger:hover:not(:disabled) { background: var(--red-dim); color: var(--red); border-color: rgba(239,68,68,.25); }
+
+    .icon-btn {
+      width: 30px; height: 30px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 7px; border: 1px solid var(--bd-2);
+      background: transparent; color: var(--t2);
+      transition: all var(--t-fast) var(--ease);
+    }
+    .icon-btn:hover { background: var(--blue-dim); border-color: rgba(59,130,246,.25); color: var(--blue); }
+
+    /* ─────────────────────────────────────────────────
+       BADGES
+    ───────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 20px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .03em; white-space: nowrap;
+    }
+    .badge-blue   { background: var(--blue-dim);   color: #60A5FA; border: 1px solid rgba(59,130,246,.2); }
+    .badge-red    { background: var(--red-dim);    color: #F87171; border: 1px solid rgba(239,68,68,.2); }
+    .badge-violet { background: var(--violet-dim); color: #A78BFA; border: 1px solid rgba(139,92,246,.2); }
+    .badge-green  { background: var(--green-dim);  color: #34D399; border: 1px solid rgba(16,185,129,.2); }
+
+    /* ─────────────────────────────────────────────────
+       AUTH PAGE
+    ───────────────────────────────────────────────── */
+    #auth-page {
+      min-height: 100vh;
+      display: flex;
+      background: var(--bg);
+    }
+
+    /* left branding panel */
+    .auth-panel-left {
+      display: none;
+      width: 480px;
+      flex-shrink: 0;
+      background: var(--surface-1);
+      border-right: 1px solid var(--bd);
+      position: relative;
+      overflow: hidden;
+      padding: 56px 48px;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    @media (min-width: 900px) { .auth-panel-left { display: flex; } }
+
+    /* mesh gradient */
+    .auth-panel-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(59,130,246,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 80%, rgba(139,92,246,.10) 0%, transparent 70%);
+    }
+    /* subtle grid */
+    .auth-panel-left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(148,163,184,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148,163,184,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .auth-brand { position: relative; z-index: 1; }
+    .auth-brand-logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 48px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.4px; }
+
+    .auth-headline {
+      font-size: 30px; font-weight: 700;
+      letter-spacing: -.6px; line-height: 1.25;
+      margin-bottom: 16px;
+    }
+    .auth-headline span {
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .auth-tagline {
+      font-size: 14px; color: var(--t2);
+      line-height: 1.65; margin-bottom: 44px;
+    }
+
+    .feature-list { display: flex; flex-direction: column; gap: 14px; }
+    .feature-item {
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .feature-icon {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px;
+    }
+    .feature-text { font-size: 13px; }
+    .feature-text strong { color: var(--t1); display: block; font-weight: 500; }
+    .feature-text span { color: var(--t3); font-size: 12px; }
+
+    .auth-footer-left {
+      position: relative; z-index: 1;
+      font-size: 11.5px; color: var(--t3); line-height: 1.6;
+    }
+
+    /* right form panel */
+    .auth-panel-right {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      position: relative;
+    }
+
+    /* right side subtle glow */
+    .auth-panel-right::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(59,130,246,.05) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .auth-form-wrap {
+      width: 100%; max-width: 380px;
+      position: relative; z-index: 1;
+    }
+
+    /* Mobile: show brand logo */
+    .auth-mobile-logo {
+      display: flex; align-items: center; gap: 10px;
+      justify-content: center; margin-bottom: 32px;
+    }
+    @media (min-width: 900px) { .auth-mobile-logo { display: none; } }
+
+    .auth-form-header { margin-bottom: 28px; }
+    .auth-form-title {
+      font-size: 22px; font-weight: 700; letter-spacing: -.4px;
+      margin-bottom: 6px;
+    }
+    .auth-form-sub { font-size: 13px; color: var(--t2); line-height: 1.5; }
+
+    .auth-card {
+      background: var(--surface-1);
+      border: 1px solid var(--bd-2);
+      border-radius: var(--r-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .form-row { margin-bottom: 14px; }
+    .form-row:last-of-type { margin-bottom: 0; }
+
+    .auth-submit-btn {
+      width: 100%;
+      background: var(--blue); color: #fff;
+      border: none; padding: 11px 20px;
+      border-radius: var(--r);
+      font-size: 13.5px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 22px;
+      transition: all var(--t-fast) var(--ease);
+      letter-spacing: .01em;
+    }
+    .auth-submit-btn:hover:not(:disabled) {
+      background: var(--blue-dark);
+      box-shadow: 0 4px 20px var(--blue-glow);
+      transform: translateY(-1px);
+    }
+    .auth-submit-btn:active:not(:disabled) { transform: none; }
+    .auth-submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .auth-error-box {
+      margin-top: 14px;
+      padding: 10px 13px;
+      background: var(--red-dim);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: var(--r);
+      font-size: 12.5px; color: #F87171;
+      display: none;
+    }
+
+    .auth-note {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px; color: var(--t3); line-height: 1.6;
+    }
+
+    /* ─────────────────────────────────────────────────
+       APP SHELL
+    ───────────────────────────────────────────────── */
+    #app { display: none; min-height: 100vh; }
+    #app.visible { display: flex; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar);
+      min-height: 100vh;
+      background: var(--surface-1);
+      border-right: 1px solid var(--bd);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 50;
+    }
+
+    .sidebar-logo {
+      height: var(--topbar);
+      padding: 0 18px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--bd);
+      flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-wordmark { font-size: 15px; font-weight: 700; letter-spacing: -.35px; }
+    .logo-pill {
+      margin-left: auto;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--blue); background: var(--blue-dim);
+      border: 1px solid rgba(59,130,246,.2);
+      padding: 2px 7px; border-radius: 20px;
+    }
+
+    .sidebar-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 10px;
+      display: flex; flex-direction: column; gap: 1px;
+    }
+
+    .nav-section-label {
+      padding: 14px 10px 5px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .09em; text-transform: uppercase;
+      color: var(--t3);
+    }
+
+    .nav-link {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 13px; font-weight: 500; color: var(--t2);
+      cursor: pointer; border: 1px solid transparent;
+      transition: all var(--t-fast) var(--ease);
+      position: relative;
+    }
+    .nav-link svg { flex-shrink: 0; color: var(--t3); transition: color var(--t-fast); }
+    .nav-link:hover { background: var(--surface-2); color: var(--t1); }
+    .nav-link:hover svg { color: var(--t2); }
+    .nav-link.active {
+      background: var(--blue-dim); color: var(--blue);
+      border-color: rgba(59,130,246,.15);
+    }
+    .nav-link.active svg { color: var(--blue); }
+    .nav-link.coming-soon { opacity: .4; cursor: default; pointer-events: none; }
+
+    .nav-count {
+      margin-left: auto;
+      font-size: 10.5px; font-weight: 600;
+      color: var(--t3); background: var(--surface-3);
+      padding: 1px 7px; border-radius: 20px; min-width: 20px; text-align: center;
+    }
+    .nav-soon {
+      margin-left: auto;
+      font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      color: var(--t3); background: var(--surface-3);
+      padding: 2px 6px; border-radius: 20px;
+    }
+
+    .sidebar-user {
+      padding: 10px;
+      border-top: 1px solid var(--bd);
+      flex-shrink: 0;
+    }
+    .user-tile {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px; cursor: pointer;
+      border: 1px solid transparent;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .user-tile:hover { background: var(--surface-2); border-color: var(--bd); }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .user-meta { flex: 1; min-width: 0; }
+    .user-meta-name {
+      font-size: 12.5px; font-weight: 600; color: var(--t1);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-meta-id { font-size: 10.5px; color: var(--t3); font-family: monospace; }
+    .logout-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px; border: none; background: transparent;
+      color: var(--t3); cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .logout-btn:hover { background: var(--red-dim); color: var(--red); }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      height: var(--topbar);
+      background: rgba(6,10,20,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--bd);
+      padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 30;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 8px; }
+    .topbar-title { font-size: 14.5px; font-weight: 600; letter-spacing: -.25px; }
+    .topbar-sep { color: var(--t3); font-size: 16px; }
+    .topbar-sub { font-size: 13px; color: var(--t2); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    /* ── MAIN WRAP ── */
+    .main-wrap {
+      margin-left: var(--sidebar);
+      flex: 1; min-height: 100vh;
+      display: flex; flex-direction: column;
+      background: var(--bg);
+    }
+
+    /* ── PAGE CONTENT ── */
+    .page { flex: 1; padding: 28px 32px; }
+
+    /* Page header */
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .page-header-text h1 {
+      font-size: 22px; font-weight: 700; letter-spacing: -.45px; margin-bottom: 4px;
+    }
+    .page-header-text p { font-size: 13px; color: var(--t2); }
+
+    /* ─────────────────────────────────────────────────
+       STATS ROW
+    ───────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+
+    .stat-card {
+      background: var(--surface-1);
+      border: 1px solid var(--bd);
+      border-radius: var(--r-lg);
+      padding: 18px 20px 16px;
+      position: relative; overflow: hidden;
+      transition: border-color var(--t-fast) var(--ease);
+    }
+    .stat-card:hover { border-color: var(--bd-2); }
+    /* top shimmer line */
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--bd-3) 50%, transparent 100%);
+    }
+    /* colored left accent */
+    .stat-card::after {
+      content: '';
+      position: absolute; left: 0; top: 14px; bottom: 14px; width: 2px;
+      border-radius: 0 2px 2px 0;
+    }
+    .stat-card.blue::after  { background: var(--blue); }
+    .stat-card.green::after { background: var(--green); }
+    .stat-card.red::after   { background: var(--red); }
+    .stat-card.violet::after { background: var(--violet); }
+
+    .stat-row-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .stat-label-text {
+      font-size: 11px; font-weight: 600; color: var(--t2);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .stat-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stat-value {
+      font-size: 26px; font-weight: 700; letter-spacing: -.5px; color: var(--t1);
+    }
+    .stat-sub { font-size: 11.5px; color: var(--t3); margin-top: 3px; }
+
+    /* ─────────────────────────────────────────────────
+       SURVEY GRID
+    ───────────────────────────────────────────────── */
+    .section-bar {
+      display: flex; align-items: center; margin-bottom: 14px; gap: 8px;
+    }
+    .section-bar-title { font-size: 13.5px; font-weight: 600; }
+    .section-bar-count {
+      font-size: 11px; font-weight: 600; color: var(--t3);
+      background: var(--surface-2); border: 1px solid var(--bd);
+      padding: 2px 8px; border-radius: 20px;
+    }
+
+    .grid-surveys {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 14px;
+    }
+
+    .survey-card {
+      background: var(--surface-1);
+      border: 1px solid var(--bd);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: transform var(--t-mid) var(--ease), border-color var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease);
+      display: flex; flex-direction: column;
+      position: relative; overflow: hidden;
+    }
+    .survey-card:hover {
+      border-color: var(--bd-2);
+      background: var(--surface-2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
+    }
+    /* glow on hover uses JS mouse tracking */
+    .survey-card-glow {
+      position: absolute; inset: 0;
+      background: radial-gradient(400px circle at var(--mx,50%) var(--my,50%), rgba(59,130,246,.06), transparent 60%);
+      pointer-events: none; border-radius: var(--r-lg);
+      opacity: 0; transition: opacity var(--t-mid);
+    }
+    .survey-card:hover .survey-card-glow { opacity: 1; }
+
+    .survey-card-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; margin-bottom: 8px;
+    }
+    .survey-card-title {
+      font-size: 14px; font-weight: 600; color: var(--t1); line-height: 1.4;
+    }
+    .survey-card-desc {
+      font-size: 12.5px; color: var(--t2); line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      margin-bottom: 16px; flex: 1;
+    }
+    .survey-card-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: 12px; border-top: 1px solid var(--bd);
+      margin-top: auto;
+    }
+    .survey-card-meta {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .meta-chip {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; color: var(--t3);
+    }
+    .survey-card-actions {
+      display: flex; align-items: center; gap: 5px;
+      opacity: 0; transition: opacity var(--t-fast) var(--ease);
+    }
+    .survey-card:hover .survey-card-actions { opacity: 1; }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: 1/-1;
+      padding: 80px 24px;
+      text-align: center;
+      border: 1.5px dashed var(--bd-2);
+      border-radius: var(--r-xl);
+      background: var(--surface-1);
+      animation: fadeUp var(--t-mid) var(--ease);
+    }
+    .empty-icon-wrap {
+      width: 52px; height: 52px; margin: 0 auto 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--bd-2);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--t3);
+    }
+    .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .empty-desc {
+      font-size: 13px; color: var(--t2); line-height: 1.65;
+      max-width: 320px; margin: 0 auto 24px;
+    }
+
+    /* ─────────────────────────────────────────────────
+       SURVEY EDITOR
+    ───────────────────────────────────────────────── */
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 22px;
+      align-items: start;
+    }
+    @media (max-width: 1000px) { .editor-grid { grid-template-columns: 1fr; } }
+
+    .q-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .q-card {
+      background: var(--surface-1);
+      border: 1px solid var(--bd);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      transition: border-color var(--t-fast) var(--ease);
+      position: relative;
+    }
+    .q-card:hover { border-color: var(--bd-2); }
+
+    .q-card-head {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 0;
+    }
+    .q-num {
+      width: 24px; height: 24px; flex-shrink: 0;
+      background: var(--surface-3); border: 1px solid var(--bd-2);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: var(--t2);
+    }
+    .q-title-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-size: 14px; font-weight: 500; color: var(--t1);
+      padding: 0; min-width: 0;
+    }
+    .q-title-input::placeholder { color: var(--t3); }
+
+    .q-type-select {
+      background: var(--surface-2);
+      border: 1px solid var(--bd-2);
+      color: var(--t2); padding: 5px 9px;
+      border-radius: 6px; font-size: 12px; font-weight: 500;
+      outline: none; cursor: pointer; flex-shrink: 0;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .q-type-select:hover, .q-type-select:focus { border-color: var(--blue); color: var(--t1); }
+
+    .q-delete-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 7px; border: none; background: transparent;
+      color: var(--t3); cursor: pointer;
+      opacity: 0; transition: all var(--t-fast) var(--ease);
+    }
+    .q-card:hover .q-delete-btn { opacity: 1; }
+    .q-delete-btn:hover { background: var(--red-dim); color: var(--red); }
+
+    .q-options {
+      margin: 12px 0 0 34px;
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .q-option-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .q-opt-bullet {
+      width: 14px; height: 14px; flex-shrink: 0;
+      border: 2px solid var(--bd-3); border-radius: 50%;
+    }
+    .q-opt-bullet.sq { border-radius: 3px; }
+    .q-opt-input {
+      flex: 1; background: var(--surface-2);
+      border: 1px solid var(--bd); color: var(--t1);
+      padding: 7px 10px; border-radius: 6px;
+      font-size: 12.5px; outline: none;
+      transition: border-color var(--t-fast) var(--ease);
+    }
+    .q-opt-input:focus { border-color: var(--blue); }
+    .q-opt-del {
+      width: 24px; height: 24px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 5px; border: none; background: transparent;
+      color: var(--t3); cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .q-opt-del:hover { background: var(--red-dim); color: var(--red); }
+
+    .add-opt-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 10px; margin-top: 2px;
+      background: transparent;
+      border: 1px dashed var(--bd-2);
+      border-radius: 6px; cursor: pointer;
+      font-size: 12px; color: var(--t3);
+      transition: all var(--t-fast) var(--ease);
+    }
+    .add-opt-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+
+    .add-q-btn {
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 14px; width: 100%;
+      border: 1.5px dashed var(--bd-2);
+      border-radius: var(--r-lg);
+      background: transparent; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: var(--t3);
+      transition: all var(--t-fast) var(--ease);
+    }
+    .add-q-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+
+    /* Editor sidebar panels */
+    .editor-sidebar { display: flex; flex-direction: column; gap: 14px; }
+    .e-panel {
+      background: var(--surface-1);
+      border: 1px solid var(--bd);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .e-panel-head {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--bd);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase; color: var(--t2);
+      background: var(--surface-2);
+    }
+    .e-panel-body { padding: 14px 16px; }
+    .e-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12.5px; margin-bottom: 8px;
+    }
+    .e-row:last-child { margin-bottom: 0; }
+    .e-row-label { color: var(--t2); }
+    .e-row-val { font-weight: 600; color: var(--t1); }
+
+    /* ─────────────────────────────────────────────────
+       RESULTS
+    ───────────────────────────────────────────────── */
+    .results-wrap {
+      background: var(--surface-1);
+      border: 1px solid var(--bd);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .results-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    .results-table th {
+      padding: 11px 15px; text-align: left;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--t2);
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--bd);
+      white-space: nowrap;
+    }
+    .results-table td {
+      padding: 12px 15px; color: var(--t1);
+      border-bottom: 1px solid var(--bd);
+      max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .results-table tr:last-child td { border-bottom: none; }
+    .results-table tbody tr { transition: background var(--t-fast); }
+    .results-table tbody tr:hover td { background: var(--surface-2); }
+
+    /* ─────────────────────────────────────────────────
+       MODAL
+    ───────────────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--t-mid) var(--ease);
+    }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+
+    .modal {
+      width: 100%; max-width: 480px;
+      background: var(--surface-1);
+      border: 1px solid var(--bd-2);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-xl);
+      transform: scale(.97) translateY(8px);
+      transition: transform .22s cubic-bezier(.34,1.4,.64,1);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .overlay.open .modal { transform: scale(1) translateY(0); }
+
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--bd);
+    }
+    .modal-head-title { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+    .modal-close {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 7px; border: 1px solid var(--bd-2);
+      background: transparent; color: var(--t2); cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .modal-close:hover { background: var(--surface-3); color: var(--t1); }
+
+    .modal-body { padding: 20px 24px; }
+    .modal-foot {
+      display: flex; justify-content: flex-end; gap: 8px;
+      padding: 14px 24px 22px;
+      border-top: 1px solid var(--bd);
+    }
+    .modal-row { margin-bottom: 14px; }
+    .modal-row:last-child { margin-bottom: 0; }
+
+    /* Visibility toggle */
+    .vis-group {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .vis-radio { display: none; }
+    .vis-label {
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 10px; border: 1px solid var(--bd-2); border-radius: var(--r);
+      font-size: 13px; font-weight: 500; color: var(--t2);
+      background: var(--bg); cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .vis-label:hover { border-color: var(--bd-3); color: var(--t1); }
+    .vis-radio:checked + .vis-label {
+      border-color: var(--blue); color: var(--blue); background: var(--blue-dim);
+    }
+
+    /* ─────────────────────────────────────────────────
+       TOAST
+    ───────────────────────────────────────────────── */
     #toast {
-      position: fixed; bottom: 24px; right: 24px; background: #fff; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 500; font-size: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15); transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100;
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--surface-3);
+      border: 1px solid var(--bd-2);
+      color: var(--t1);
+      padding: 11px 16px;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 9px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.45);
+      transform: translateY(12px) scale(.97);
+      opacity: 0; pointer-events: none;
+      transition: all .22s cubic-bezier(.34,1.4,.64,1);
+      max-width: 340px;
     }
-    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.show { transform: translateY(0) scale(1); opacity: 1; }
+    .toast-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .toast-dot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .toast-dot.err { background: var(--red);   box-shadow: 0 0 6px var(--red); }
   </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
 
-  <nav class="border-b border-border bg-surface h-16 flex items-center px-8 justify-between shrink-0">
-    <div class="font-bold text-lg tracking-tight">10xQuery</div>
-    <div id="nav-user-info" class="hidden flex items-center gap-4 text-sm text-textMuted">
-      <span class="bg-background border border-border px-3 py-1 rounded-md font-mono" id="navUserId"></span>
-      <button onclick="logout()" class="hover:text-textMain transition-colors">Log Out</button>
-    </div>
-  </nav>
+<!-- ════════════════════════════════════════════════
+     AUTH PAGE
+════════════════════════════════════════════════ -->
+<div id="auth-page">
 
-  <main class="flex-1 w-full max-w-5xl mx-auto p-8 flex flex-col items-center justify-center">
-    
-    <!-- Auth Section -->
-    <div id="auth-view" class="w-full max-w-sm w-full">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold mb-2 tracking-tight">Welcome back</h1>
-        <p class="text-textMuted">Enter your details to sign in or create an account.</p>
+  <!-- Left branding panel (desktop) -->
+  <div class="auth-panel-left">
+    <div class="auth-brand">
+      <div class="auth-brand-logo">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <span class="brand-name">10xQuery</span>
       </div>
-      
-      <div class="glass-panel p-8 rounded-xl shadow-2xl">
-        <form onsubmit="event.preventDefault(); handleLogin(event);">
-          <div class="mb-5">
-            <label class="block text-sm font-medium text-textMuted mb-2">Email</label>
-            <input type="email" id="email" class="input-field" placeholder="you@example.com" required>
+
+      <h2 class="auth-headline">
+        The enterprise survey<br>platform built for <span>scale.</span>
+      </h2>
+      <p class="auth-tagline">
+        Design complex surveys, control access down to the individual user, and analyze results in a unified workspace.
+      </p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon" style="background:var(--blue-dim);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <div class="mb-8">
-            <label class="block text-sm font-medium text-textMuted mb-2">Password</label>
-            <input type="password" id="password" class="input-field" placeholder="••••••••" required>
+          <div class="feature-text">
+            <strong>Private surveys with user-level access control</strong>
+            <span>Grant access to specific 8-digit user IDs only</span>
           </div>
-          <button type="submit" id="loginBtn" class="btn-primary w-full">Continue</button>
-          <div id="auth-error" class="text-red-500 text-sm mt-4 text-center hidden"></div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Dashboard Section -->
-    <div id="dashboard-view" class="w-full hidden mt-8">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
-        <div>
-          <h2 class="text-3xl font-bold tracking-tight">Surveys</h2>
-          <p class="text-textMuted mt-1">Manage your public and private data collections.</p>
         </div>
-        <button onclick="openModal()" class="btn-primary mt-4 md:mt-0 flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          New Survey
-        </button>
-      </div>
-
-      <div id="surveys-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Surveys injected here -->
-      </div>
-    </div>
-
-    <!-- Survey Editor View -->
-    <div id="editor-view" class="w-full hidden mt-8">
-      <div class="flex items-center gap-4 mb-8">
-        <button onclick="closeEditor()" class="text-textMuted hover:text-textMain transition-colors">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        </button>
-        <h2 class="text-2xl font-bold tracking-tight" id="editorTitle">Edit Survey</h2>
-        <div class="ml-auto flex gap-3">
-          <button onclick="viewResults()" class="btn-secondary">View Results</button>
-          <button onclick="saveDefinition()" class="btn-primary" id="saveDefBtn">Save Questions</button>
+        <div class="feature-item">
+          <div class="feature-icon" style="background:var(--violet-dim);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="feature-text">
+            <strong>Rich question types</strong>
+            <span>Short text, long text, single choice, and multiple choice</span>
+          </div>
         </div>
-      </div>
-
-      <div class="glass-panel p-8 rounded-xl shadow-2xl">
-        <div id="questions-list" class="space-y-6">
-          <!-- Questions go here -->
+        <div class="feature-item">
+          <div class="feature-icon" style="background:var(--green-dim);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div class="feature-text">
+            <strong>Real-time response analytics</strong>
+            <span>View all participant responses in a structured data table</span>
+          </div>
         </div>
-        <button onclick="addQuestion()" class="mt-8 btn-secondary w-full py-4 border-dashed border-2 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Add Question
-        </button>
-      </div>
-    </div>
-
-    <!-- Results View -->
-    <div id="results-view" class="w-full hidden mt-8">
-      <div class="flex items-center gap-4 mb-8">
-        <button onclick="closeResults()" class="text-textMuted hover:text-textMain transition-colors">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        </button>
-        <h2 class="text-2xl font-bold tracking-tight" id="resultsTitle">Survey Results</h2>
-        <div class="ml-auto text-sm text-textMuted" id="resultsCount">0 responses</div>
-      </div>
-
-      <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse" id="results-table">
-            <thead>
-              <tr id="results-thead" class="border-b border-border bg-black/40">
-                <!-- Headers injected -->
-              </tr>
-            </thead>
-            <tbody id="results-tbody" class="divide-y divide-border">
-                <!-- Rows injected -->
-            </tbody>
-          </table>
+        <div class="feature-item">
+          <div class="feature-icon" style="background:var(--amber-dim);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div class="feature-text">
+            <strong>Zero infrastructure required</strong>
+            <span>Serverless, globally distributed, always available</span>
+          </div>
         </div>
       </div>
     </div>
 
-  </main>
-
-  <!-- Create Survey Modal -->
-  <div id="createModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3 class="text-xl font-bold mb-6">Create New Survey</h3>
-      <form onsubmit="event.preventDefault(); handleCreateSurvey(event);">
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-textMuted mb-2">Title</label>
-          <input type="text" id="surveyTitle" class="input-field" placeholder="e.g. Q3 Engineering Feedback" required>
-        </div>
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-textMuted mb-2">Description</label>
-          <input type="text" id="surveyDesc" class="input-field" placeholder="Optional brief description">
-        </div>
-        
-        <label class="block text-sm font-medium text-textMuted mb-2">Visibility</label>
-        <div class="radio-group">
-          <input type="radio" name="visibility" id="vis-public" value="public" class="radio-input" checked onchange="toggleAllowedUsers()">
-          <label for="vis-public" class="radio-label">Public</label>
-          
-          <input type="radio" name="visibility" id="vis-private" value="private" class="radio-input" onchange="toggleAllowedUsers()">
-          <label for="vis-private" class="radio-label flex items-center justify-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-            Private
-          </label>
-        </div>
-
-        <div id="allowedUsersGroup" class="mb-8 hidden">
-          <label class="block text-sm font-medium text-textMuted mb-2">Allowed User IDs</label>
-          <textarea id="allowedUsers" class="input-field resize-none h-20" placeholder="Paste 8-digit IDs separated by commas..."></textarea>
-          <p class="text-xs text-textMuted mt-2">Only these exact IDs will be able to view and submit responses.</p>
-        </div>
-
-        <div class="flex justify-end gap-3">
-          <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
-          <button type="submit" id="createBtn" class="btn-primary">Create Survey</button>
-        </div>
-      </form>
+    <div class="auth-footer-left">
+      © 2026 10xQuery Inc. · Enterprise Edition<br>
+      Built on AWS · Secured by Argon2 + JWT
     </div>
   </div>
 
-  <div id="toast">Copied to clipboard</div>
+  <!-- Right form panel -->
+  <div class="auth-panel-right">
+    <div class="auth-form-wrap">
 
-  <script>
-    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
-    let currentUser = null;
-    let currentSurveyId = null;
-    let editorQuestions = [];
+      <!-- mobile logo -->
+      <div class="auth-mobile-logo">
+        <div class="brand-icon" style="width:32px;height:32px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <span style="font-size:17px;font-weight:700;letter-spacing:-.4px;">10xQuery</span>
+      </div>
 
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
+      <div class="auth-form-header">
+        <h1 class="auth-form-title">Sign in to your workspace</h1>
+        <p class="auth-form-sub">Enter your credentials, or create a new account automatically.</p>
+      </div>
 
-    function switchView(viewId) {
-      ['auth-view', 'dashboard-view', 'editor-view', 'results-view'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      document.getElementById(viewId).classList.remove('hidden');
-    }
+      <div class="auth-card">
+        <form onsubmit="event.preventDefault(); handleLogin(event);">
+          <div class="form-row">
+            <label class="field-label" for="email">Work Email</label>
+            <input type="email" id="email" class="field-input" placeholder="you@company.com" required autocomplete="email">
+          </div>
+          <div class="form-row">
+            <label class="field-label" for="password">Password</label>
+            <input type="password" id="password" class="field-input" placeholder="Min. 8 characters" required autocomplete="current-password">
+          </div>
+          <div id="auth-error" class="auth-error-box"></div>
+          <button type="submit" id="loginBtn" class="auth-submit-btn">
+            <span id="loginBtnContent">Continue with Email</span>
+          </button>
+        </form>
+      </div>
 
-    async function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const btn = document.getElementById('loginBtn');
-      const errDiv = document.getElementById('auth-error');
-      
-      btn.disabled = true;
-      btn.textContent = 'Authenticating...';
-      errDiv.classList.add('hidden');
+      <p class="auth-note">
+        New to 10xQuery? An account is created automatically on first sign-in.<br>
+        By continuing you agree to our Terms of Service &amp; Privacy Policy.
+      </p>
 
-      try {
-        let res = await fetch(`${API}/v1/auth/login`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        if (!res.ok) {
-          res = await fetch(`${API}/v1/users`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
-        }
-        
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Authentication failed');
-        
-        currentUser = data.user;
-        switchView('dashboard-view');
-        document.querySelector('main').classList.remove('justify-center');
-        document.querySelector('main').classList.add('justify-start');
-        
-        const navInfo = document.getElementById('nav-user-info');
-        navInfo.classList.remove('hidden');
-        document.getElementById('navUserId').innerHTML = `<span class="text-textMuted mr-2">ID</span><span class="text-primary">${currentUser.userId}</span>`;
-        
-        loadSurveys();
-      } catch (err) {
-        errDiv.textContent = err.message;
-        errDiv.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Continue';
-      }
-    }
+    </div>
+  </div>
+</div><!-- /auth-page -->
 
-    function logout() {
-      currentUser = null;
-      switchView('auth-view');
-      document.getElementById('nav-user-info').classList.add('hidden');
-      document.querySelector('main').classList.add('justify-center');
-      document.querySelector('main').classList.remove('justify-start');
-    }
 
-    async function loadSurveys() {
-      if (!currentUser) return;
-      const grid = document.getElementById('surveys-grid');
-      grid.innerHTML = '<div class="col-span-full text-center text-textMuted py-12">Loading surveys...</div>';
-      
-      try {
-        const res = await fetch(`${API}/v1/surveys?userId=${currentUser.userId}`);
-        const surveys = await res.json();
-        
-        if (!surveys.length) {
-          grid.innerHTML = `
-            <div class="col-span-full border border-dashed border-border rounded-xl p-12 text-center flex flex-col items-center justify-center bg-surface">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-textMuted mb-4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-              <h3 class="text-lg font-medium mb-1">No surveys yet</h3>
-              <p class="text-textMuted mb-4 text-sm">Create your first survey to start collecting data.</p>
-              <button onclick="openModal()" class="btn-primary">Create Survey</button>
-            </div>`;
-          return;
-        }
+<!-- ════════════════════════════════════════════════
+     APP SHELL
+════════════════════════════════════════════════ -->
+<div id="app">
 
-        grid.innerHTML = surveys.map(s => {
-          const isPrivate = s.visibility === 'private';
-          const visibilityBadge = isPrivate 
-            ? `<span class="bg-red-950/30 text-red-400 border border-red-900/50 px-2 py-0.5 rounded text-xs flex items-center gap-1"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Private</span>`
-            : `<span class="bg-blue-950/30 text-blue-400 border border-blue-900/50 px-2 py-0.5 rounded text-xs">Public</span>`;
-            
-          const url = `https://10xquery.com/survey.html?id=${s.surveyId}`;
-          
-          return `
-            <div class="glass-panel p-5 rounded-xl flex flex-col h-full hover:border-gray-700 transition-colors group cursor-pointer" onclick="openEditor('${s.surveyId}', '${s.title.replace(/'/g, "\\\\'")}')">
-              <div class="flex justify-between items-start mb-3">
-                <h3 class="font-semibold text-lg line-clamp-1 flex-1 pr-2" title="${s.title}">${s.title}</h3>
-                ${visibilityBadge}
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <span class="logo-wordmark">10xQuery</span>
+      <span class="logo-pill">Enterprise</span>
+    </div>
+
+    <div class="sidebar-scroll">
+      <span class="nav-section-label">Workspace</span>
+
+      <div class="nav-link active" id="nav-surveys" onclick="showDashboard()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Surveys
+        <span class="nav-count" id="navCount">0</span>
+      </div>
+
+      <div class="nav-link coming-soon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+        <span class="nav-soon">Soon</span>
+      </div>
+
+      <div class="nav-link coming-soon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        Integrations
+        <span class="nav-soon">Soon</span>
+      </div>
+
+      <span class="nav-section-label">Account</span>
+
+      <div class="nav-link coming-soon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Team Members
+        <span class="nav-soon">Soon</span>
+      </div>
+
+      <div class="nav-link coming-soon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+        Settings
+        <span class="nav-soon">Soon</span>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-tile">
+        <div class="avatar" id="userAvatar">?</div>
+        <div class="user-meta">
+          <div class="user-meta-name" id="userName">—</div>
+          <div class="user-meta-id">ID: <span id="userId">—</span></div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Sign out">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-wrap">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left" id="topbarLeft">
+        <span class="topbar-title" id="topbarTitle">Surveys</span>
+      </div>
+      <div class="topbar-right" id="topbarRight">
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New Survey
+        </button>
+      </div>
+    </header>
+
+    <!-- ── PAGE: SURVEYS DASHBOARD ── -->
+    <div id="page-surveys" class="page">
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Surveys</h1>
+          <p>Create, manage, and analyze your data collection campaigns.</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-row-top">
+            <span class="stat-label-text">Total Surveys</span>
+            <div class="stat-icon" style="background:var(--blue-dim);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-sub">in your workspace</div>
+        </div>
+
+        <div class="stat-card green">
+          <div class="stat-row-top">
+            <span class="stat-label-text">Public</span>
+            <div class="stat-icon" style="background:var(--green-dim);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statPublic">—</div>
+          <div class="stat-sub">open to anyone</div>
+        </div>
+
+        <div class="stat-card red">
+          <div class="stat-row-top">
+            <span class="stat-label-text">Private</span>
+            <div class="stat-icon" style="background:var(--red-dim);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statPrivate">—</div>
+          <div class="stat-sub">restricted access</div>
+        </div>
+
+        <div class="stat-card violet">
+          <div class="stat-row-top">
+            <span class="stat-label-text">Your User ID</span>
+            <div class="stat-icon" style="background:var(--violet-dim);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="stat-value" id="statUserId" style="font-size:18px;font-family:monospace;letter-spacing:.05em;">—</div>
+          <div class="stat-sub">share for private survey access</div>
+        </div>
+      </div>
+
+      <!-- Survey grid -->
+      <div class="section-bar">
+        <span class="section-bar-title">All Surveys</span>
+        <span class="section-bar-count" id="surveysCount">0</span>
+      </div>
+      <div class="grid-surveys" id="surveys-grid">
+        <!-- injected -->
+      </div>
+    </div><!-- /page-surveys -->
+
+
+    <!-- ── PAGE: EDITOR ── -->
+    <div id="page-editor" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="page-header-text" style="min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick="closeEditor()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back
+            </button>
+            <span class="topbar-sep">/</span>
+            <h1 id="editorTitle" style="font-size:18px;margin-bottom:0;min-width:0;" class="truncate">Edit Survey</h1>
+          </div>
+          <p id="editorId" style="font-size:11.5px;color:var(--t3);font-family:monospace;"></p>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button class="btn btn-ghost" onclick="viewResults()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Results
+          </button>
+          <button class="btn btn-primary" id="saveBtn" onclick="saveDefinition()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Save
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <!-- Questions list -->
+        <div>
+          <div class="q-list" id="q-list"></div>
+          <button class="add-q-btn" style="margin-top:10px;" onclick="addQuestion()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Question
+          </button>
+        </div>
+
+        <!-- Sidebar panels -->
+        <div class="editor-sidebar">
+          <div class="e-panel">
+            <div class="e-panel-head">Survey Stats</div>
+            <div class="e-panel-body">
+              <div class="e-row">
+                <span class="e-row-label">Questions</span>
+                <span class="e-row-val" id="panelQCount">0</span>
               </div>
-              <p class="text-textMuted text-sm line-clamp-2 mb-6 flex-1">${s.description || 'No description'}</p>
-              <div class="flex items-center justify-between mt-auto pt-4 border-t border-border">
-                <span class="text-xs text-textMuted font-mono bg-black px-2 py-1 rounded">ID: ${s.surveyId.substring(0,8)}...</span>
-                <button onclick="event.stopPropagation(); copyToClipboard('${url}')" class="text-sm text-primary hover:text-primaryHover font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                  Copy Link
+              <div class="e-row">
+                <span class="e-row-label">Survey ID</span>
+                <span class="e-row-val" id="panelId" style="font-family:monospace;font-size:11px;color:var(--t2);">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="e-panel">
+            <div class="e-panel-head">Share</div>
+            <div class="e-panel-body">
+              <p style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;">
+                Share this link with participants to collect responses.
+              </p>
+              <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="copyEditorLink()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                Copy Link
+              </button>
+            </div>
+          </div>
+
+          <div class="e-panel">
+            <div class="e-panel-head">Question Types</div>
+            <div class="e-panel-body">
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px;"></span>
+                  <div><span style="color:var(--t1);font-weight:500;">Short Text</span><br><span style="color:var(--t3);">Single-line free response</span></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:var(--violet);flex-shrink:0;margin-top:4px;"></span>
+                  <div><span style="color:var(--t1);font-weight:500;">Long Text</span><br><span style="color:var(--t3);">Multi-line paragraph response</span></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:4px;"></span>
+                  <div><span style="color:var(--t1);font-weight:500;">Single Choice</span><br><span style="color:var(--t3);">Pick one from predefined options</span></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;margin-top:4px;"></span>
+                  <div><span style="color:var(--t1);font-weight:500;">Multiple Choice</span><br><span style="color:var(--t3);">Select all that apply</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-editor -->
+
+
+    <!-- ── PAGE: RESULTS ── -->
+    <div id="page-results" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="page-header-text">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <button class="btn btn-ghost btn-sm" onclick="closeResults()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+              </svg>
+              Back
+            </button>
+            <span class="topbar-sep">/</span>
+            <h1 id="resultsTitle" style="font-size:18px;margin-bottom:0;">Results</h1>
+          </div>
+          <p style="font-size:13px;color:var(--t2);" id="resultsCount">Loading...</p>
+        </div>
+      </div>
+
+      <div class="results-wrap">
+        <table class="results-table">
+          <thead><tr id="results-thead"></tr></thead>
+          <tbody id="results-tbody"></tbody>
+        </table>
+      </div>
+    </div><!-- /page-results -->
+
+  </div><!-- /main-wrap -->
+</div><!-- /app -->
+
+
+<!-- Create Survey Modal -->
+<div id="createModal" class="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-head-title">Create New Survey</span>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="createForm" onsubmit="event.preventDefault(); handleCreateSurvey(event);">
+        <div class="modal-row">
+          <label class="field-label">Title <span style="color:var(--red);">*</span></label>
+          <input type="text" id="surveyTitle" class="field-input" placeholder="e.g. Q1 2026 Customer Feedback" required>
+        </div>
+        <div class="modal-row">
+          <label class="field-label">Description <span style="color:var(--t3);">(optional)</span></label>
+          <input type="text" id="surveyDesc" class="field-input" placeholder="Brief context for participants">
+        </div>
+        <div class="modal-row">
+          <label class="field-label" style="margin-bottom:8px;">Visibility</label>
+          <div class="vis-group">
+            <input type="radio" name="visibility" id="vis-public" value="public" class="vis-radio" checked onchange="toggleAllowedUsers()">
+            <label for="vis-public" class="vis-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+              Public
+            </label>
+            <input type="radio" name="visibility" id="vis-private" value="private" class="vis-radio" onchange="toggleAllowedUsers()">
+            <label for="vis-private" class="vis-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              Private
+            </label>
+          </div>
+        </div>
+        <div id="allowedUsersGroup" style="display:none;" class="modal-row">
+          <label class="field-label">Allowed User IDs</label>
+          <textarea id="allowedUsers" class="field-input" rows="3" placeholder="12345678, 87654321, ..."></textarea>
+          <p style="font-size:11.5px;color:var(--t3);margin-top:6px;line-height:1.6;">
+            Comma-separated 8-digit IDs. Only these users will be able to view and respond.
+          </p>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="createBtn" onclick="document.getElementById('createForm').requestSubmit()">
+        Create Survey
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <span class="toast-dot ok" id="toastDot"></span>
+  <span id="toastMsg">Done</span>
+</div>
+
+
+<script>
+  /* ─────────────────────────────────────────────────
+     CONFIG
+  ───────────────────────────────────────────────── */
+  const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000'
+    : 'https://api.10xquery.com';
+
+  let currentUser   = null;
+  let currentSrvId  = null;
+  let editorQs      = [];
+  let allSurveys    = [];
+
+  /* ─────────────────────────────────────────────────
+     UTILITIES
+  ───────────────────────────────────────────────── */
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+  }
+
+  function showToast(msg, type = 'ok') {
+    document.getElementById('toastMsg').textContent = msg;
+    const dot = document.getElementById('toastDot');
+    dot.className = 'toast-dot ' + type;
+    const el = document.getElementById('toast');
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('show'), 3200);
+  }
+
+  function setPage(id) {
+    ['surveys','editor','results'].forEach(p => {
+      const el = document.getElementById('page-' + p);
+      if (el) el.style.display = p === id ? '' : 'none';
+    });
+    // topbar
+    const title = { surveys:'Surveys', editor:'Survey Editor', results:'Results' }[id] || '';
+    document.getElementById('topbarTitle').textContent = title;
+    const topbarRight = document.getElementById('topbarRight');
+    topbarRight.innerHTML = id === 'surveys'
+      ? `<button class="btn btn-primary" onclick="openModal()">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+           New Survey
+         </button>`
+      : '';
+  }
+
+  /* ─────────────────────────────────────────────────
+     AUTH
+  ───────────────────────────────────────────────── */
+  async function handleLogin(e) {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('loginBtn');
+    const errBox   = document.getElementById('auth-error');
+    const btnCnt   = document.getElementById('loginBtnContent');
+
+    btn.disabled = true;
+    btnCnt.innerHTML = '<div class="spinner"></div> Authenticating…';
+    errBox.style.display = 'none';
+
+    try {
+      let res = await fetch(`${API}/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+
+      // auto-register if login 404/401
+      if (!res.ok) {
+        res = await fetch(`${API}/v1/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
+      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Authentication failed');
+
+      currentUser = data.user;
+      mountApp();
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btnCnt.textContent = 'Continue with Email';
+    }
+  }
+
+  function mountApp() {
+    document.getElementById('auth-page').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+
+    const initials = (currentUser.displayName || currentUser.email || '?')[0].toUpperCase();
+    document.getElementById('userAvatar').textContent     = initials;
+    document.getElementById('userName').textContent       = currentUser.displayName || currentUser.email;
+    document.getElementById('userId').textContent         = currentUser.userId;
+    document.getElementById('statUserId').textContent     = currentUser.userId;
+
+    setPage('surveys');
+    loadSurveys();
+  }
+
+  function logout() {
+    currentUser = null; allSurveys = [];
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('auth-page').style.display = '';
+    document.getElementById('email').value    = '';
+    document.getElementById('password').value = '';
+  }
+
+  function showDashboard() {
+    setPage('surveys');
+    loadSurveys();
+  }
+
+  /* ─────────────────────────────────────────────────
+     SURVEYS DASHBOARD
+  ───────────────────────────────────────────────── */
+  async function loadSurveys() {
+    if (!currentUser) return;
+    const grid = document.getElementById('surveys-grid');
+
+    grid.innerHTML = [1,2,3].map(() => `
+      <div style="background:var(--surface-1);border:1px solid var(--bd);border-radius:var(--r-lg);padding:18px 20px;">
+        <div class="skeleton" style="height:14px;width:55%;margin-bottom:10px;"></div>
+        <div class="skeleton" style="height:11px;width:88%;margin-bottom:5px;"></div>
+        <div class="skeleton" style="height:11px;width:70%;"></div>
+      </div>`).join('');
+
+    try {
+      const res = await fetch(`${API}/v1/surveys?userId=${currentUser.userId}`);
+      allSurveys = await res.json();
+
+      const total  = allSurveys.length;
+      const pub    = allSurveys.filter(s => s.visibility !== 'private').length;
+      const priv   = allSurveys.filter(s => s.visibility === 'private').length;
+
+      document.getElementById('statTotal').textContent   = total;
+      document.getElementById('statPublic').textContent  = pub;
+      document.getElementById('statPrivate').textContent = priv;
+      document.getElementById('surveysCount').textContent = total;
+      document.getElementById('navCount').textContent    = total;
+
+      if (!total) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <h3 class="empty-title">No surveys yet</h3>
+            <p class="empty-desc">Create your first survey to start collecting responses from your audience or team.</p>
+            <button class="btn btn-primary" onclick="openModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Survey
+            </button>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = allSurveys.map((s, i) => {
+        const isPriv = s.visibility === 'private';
+        const url    = `https://10xquery.com/survey.html?id=${s.surveyId}`;
+        const short  = s.surveyId.slice(0, 8);
+        const date   = s.createdAt
+          ? new Date(s.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+          : '—';
+
+        return `
+          <div class="survey-card" onclick="openEditor('${s.surveyId}')">
+            <div class="survey-card-glow"></div>
+            <div class="survey-card-head">
+              <span class="survey-card-title">${esc(s.title)}</span>
+              <span class="badge ${isPriv ? 'badge-red' : 'badge-blue'}">
+                ${isPriv
+                  ? `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Private`
+                  : `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Public`}
+              </span>
+            </div>
+            <p class="survey-card-desc">${esc(s.description || 'No description provided.')}</p>
+            <div class="survey-card-foot">
+              <div class="survey-card-meta">
+                <span class="meta-chip">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  ${date}
+                </span>
+                <span class="meta-chip" style="font-family:monospace;font-size:10px;">${short}…</span>
+              </div>
+              <div class="survey-card-actions">
+                <button class="icon-btn" onclick="event.stopPropagation();copyToClipboard('${url}')" title="Copy share link">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button class="icon-btn" onclick="event.stopPropagation();openEditor('${s.surveyId}')" title="Edit survey">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
               </div>
             </div>
-          `;
-        }).join('');
-      } catch (err) {
-        grid.innerHTML = `<div class="col-span-full text-red-500 text-center py-12">Failed to load surveys.</div>`;
-      }
-    }
+          </div>`;
+      }).join('');
 
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => showToast('Link copied to clipboard!'));
-    }
-
-    // Modal logic
-    function openModal() {
-      document.getElementById('createModal').classList.add('active');
-      document.getElementById('surveyTitle').focus();
-    }
-    
-    function closeModal() {
-      document.getElementById('createModal').classList.remove('active');
-      document.getElementById('surveyTitle').value = '';
-      document.getElementById('surveyDesc').value = '';
-      document.getElementById('allowedUsers').value = '';
-      document.getElementById('vis-public').checked = true;
-      toggleAllowedUsers();
-    }
-
-    function toggleAllowedUsers() {
-      const isPrivate = document.getElementById('vis-private').checked;
-      const group = document.getElementById('allowedUsersGroup');
-      if (isPrivate) {
-        group.classList.remove('hidden');
-      } else {
-        group.classList.add('hidden');
-      }
-    }
-
-    // Editor Logic
-    async function openEditor(id, title) {
-      currentSurveyId = id;
-      document.getElementById('editorTitle').textContent = title;
-      switchView('editor-view');
-      document.getElementById('questions-list').innerHTML = '<div class="text-center text-textMuted py-8">Loading questions...</div>';
-      
-      try {
-        const res = await fetch(`${API}/v1/surveys/${id}/definition?userId=${currentUser.userId}`);
-        const data = await res.json();
-        editorQuestions = data.questions || [];
-        if (!editorQuestions.length) {
-            // Add a default text question if empty
-            editorQuestions = [{ id: 'q1', type: 'text', title: 'Your answer' }];
-        }
-        renderQuestions();
-      } catch (e) {
-        document.getElementById('questions-list').innerHTML = '<div class="text-red-500 text-center py-8">Failed to load questions.</div>';
-      }
-    }
-
-    function closeEditor() {
-      currentSurveyId = null;
-      editorQuestions = [];
-      switchView('dashboard-view');
-      loadSurveys();
-    }
-
-    function renderQuestions() {
-      const list = document.getElementById('questions-list');
-      list.innerHTML = editorQuestions.map((q, idx) => `
-        <div class="p-6 border border-border bg-black/40 rounded-lg relative group">
-          <div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-            <button onclick="removeQuestion(${idx})" class="text-red-400 hover:text-red-300" title="Remove question">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-          </div>
-          
-          <div class="flex items-center gap-4 mb-4">
-            <span class="text-textMuted font-mono text-sm">${idx + 1}.</span>
-            <input type="text" value="${q.title}" onchange="updateQuestion(${idx}, 'title', this.value)" class="input-field bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:bg-black !px-2 !py-1 flex-1 font-medium" placeholder="Question text">
-            
-            <select onchange="updateQuestion(${idx}, 'type', this.value)" class="input-field w-auto !py-1 bg-black">
-              <option value="text" ${q.type === 'text' ? 'selected' : ''}>Short Text</option>
-              <option value="longtext" ${q.type === 'longtext' ? 'selected' : ''}>Long Text</option>
-              <option value="radio" ${q.type === 'radio' ? 'selected' : ''}>Single Choice</option>
-              <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>Multiple Choice</option>
-            </select>
-          </div>
-
-          ${(q.type === 'radio' || q.type === 'checkbox') ? `
-            <div class="ml-8 space-y-2 mt-4">
-              ${(q.options || ['Option 1']).map((opt, oIdx) => `
-                <div class="flex items-center gap-3">
-                  <div class="w-4 h-4 rounded-sm border border-border flex-shrink-0 ${q.type === 'radio' ? 'rounded-full' : ''}"></div>
-                  <input type="text" value="${opt}" onchange="updateOption(${idx}, ${oIdx}, this.value)" class="input-field bg-transparent !py-1 focus:bg-black flex-1 text-sm" placeholder="Option text">
-                  <button onclick="removeOption(${idx}, ${oIdx})" class="text-textMuted hover:text-red-400 p-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-                </div>
-              `).join('')}
-              <button onclick="addOption(${idx})" class="text-sm text-primary hover:text-primaryHover mt-2 flex items-center gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add option</button>
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
-    }
-
-    function addQuestion() {
-      editorQuestions.push({
-        id: 'q' + Date.now(),
-        type: 'text',
-        title: 'New Question'
+      // Mouse-tracking glow on cards
+      document.querySelectorAll('.survey-card').forEach(card => {
+        card.addEventListener('mousemove', ev => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty('--mx', (ev.clientX - r.left) + 'px');
+          card.style.setProperty('--my', (ev.clientY - r.top) + 'px');
+        });
       });
-      renderQuestions();
+
+    } catch {
+      grid.innerHTML = `<div class="empty-state"><p style="color:var(--red);">Failed to load surveys. Please refresh.</p></div>`;
+    }
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('Link copied to clipboard'));
+  }
+
+  /* ─────────────────────────────────────────────────
+     MODAL
+  ───────────────────────────────────────────────── */
+  function openModal() {
+    document.getElementById('createModal').classList.add('open');
+    setTimeout(() => document.getElementById('surveyTitle').focus(), 80);
+  }
+  function closeModal() {
+    document.getElementById('createModal').classList.remove('open');
+    document.getElementById('createForm').reset();
+    document.getElementById('allowedUsersGroup').style.display = 'none';
+  }
+  function toggleAllowedUsers() {
+    const isPriv = document.getElementById('vis-private').checked;
+    document.getElementById('allowedUsersGroup').style.display = isPriv ? '' : 'none';
+  }
+
+  async function handleCreateSurvey(e) {
+    const btn  = document.getElementById('createBtn');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+
+    const title       = document.getElementById('surveyTitle').value.trim();
+    const description = document.getElementById('surveyDesc').value.trim();
+    const visibility  = document.querySelector('input[name="visibility"]:checked').value;
+    let allowedUsers  = [];
+    if (visibility === 'private') {
+      allowedUsers = document.getElementById('allowedUsers').value
+        .split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    function removeQuestion(idx) {
-      editorQuestions.splice(idx, 1);
-      renderQuestions();
+    try {
+      const res = await fetch(`${API}/v1/surveys`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ title, description, userId: currentUser.userId, visibility, allowedUsers }),
+      });
+      if (!res.ok) throw new Error('Failed to create survey');
+      closeModal();
+      showToast('Survey created successfully');
+      await loadSurveys();
+    } catch (err) {
+      showToast(err.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Survey';
     }
+  }
 
-    function updateQuestion(idx, field, value) {
-      editorQuestions[idx][field] = value;
-      if (field === 'type' && (value === 'radio' || value === 'checkbox')) {
-        if (!editorQuestions[idx].options) editorQuestions[idx].options = ['Option 1', 'Option 2'];
+  /* ─────────────────────────────────────────────────
+     EDITOR
+  ───────────────────────────────────────────────── */
+  async function openEditor(id) {
+    currentSrvId = id;
+    const survey = allSurveys.find(s => s.surveyId === id);
+    const title  = survey?.title || 'Survey';
+
+    document.getElementById('editorTitle').textContent  = title;
+    document.getElementById('editorId').textContent     = `ID: ${id}`;
+    document.getElementById('panelId').textContent      = id.slice(0, 18) + '…';
+    setPage('editor');
+
+    const list = document.getElementById('q-list');
+    list.innerHTML = `<div style="color:var(--t2);text-align:center;padding:40px;font-size:13px;">Loading questions…</div>`;
+
+    try {
+      const res  = await fetch(`${API}/v1/surveys/${id}/definition?userId=${currentUser.userId}`);
+      const data = await res.json();
+      editorQs   = data.questions || [];
+      if (!editorQs.length) editorQs = [{ id: 'q1', type: 'text', title: 'Your first question' }];
+      renderQuestions();
+    } catch {
+      list.innerHTML = `<div style="color:var(--red);text-align:center;padding:40px;">Failed to load questions.</div>`;
+    }
+  }
+
+  function closeEditor() {
+    currentSrvId = null; editorQs = [];
+    setPage('surveys');
+    loadSurveys();
+  }
+
+  function renderQuestions() {
+    const list = document.getElementById('q-list');
+    document.getElementById('panelQCount').textContent = editorQs.length;
+
+    list.innerHTML = editorQs.map((q, idx) => `
+      <div class="q-card" id="qc-${idx}">
+        <div class="q-card-head">
+          <div class="q-num">${idx + 1}</div>
+          <input
+            type="text"
+            class="q-title-input"
+            value="${esc(q.title)}"
+            placeholder="Question text"
+            onchange="updateQuestion(${idx},'title',this.value)"
+          >
+          <select class="q-type-select" onchange="updateQuestion(${idx},'type',this.value)">
+            <option value="text"     ${q.type==='text'     ?'selected':''}>Short Text</option>
+            <option value="longtext" ${q.type==='longtext' ?'selected':''}>Long Text</option>
+            <option value="radio"    ${q.type==='radio'    ?'selected':''}>Single Choice</option>
+            <option value="checkbox" ${q.type==='checkbox' ?'selected':''}>Multiple Choice</option>
+          </select>
+          <button class="q-delete-btn" onclick="removeQuestion(${idx})" title="Delete question">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+        ${(q.type==='radio'||q.type==='checkbox') ? `
+          <div class="q-options">
+            ${(q.options||['Option 1','Option 2']).map((opt,oi)=>`
+              <div class="q-option-row">
+                <div class="q-opt-bullet ${q.type==='checkbox'?'sq':''}"></div>
+                <input
+                  type="text"
+                  class="q-opt-input"
+                  value="${esc(opt)}"
+                  placeholder="Option text"
+                  onchange="updateOption(${idx},${oi},this.value)"
+                >
+                <button class="q-opt-del" onclick="removeOption(${idx},${oi})" title="Remove option">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>`).join('')}
+            <button class="add-opt-btn" onclick="addOption(${idx})">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add option
+            </button>
+          </div>` : ''}
+      </div>`).join('');
+  }
+
+  function addQuestion() {
+    editorQs.push({ id: 'q' + Date.now(), type: 'text', title: 'New Question' });
+    renderQuestions();
+    const cards = document.querySelectorAll('.q-card');
+    cards[cards.length - 1]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function removeQuestion(idx) {
+    editorQs.splice(idx, 1);
+    renderQuestions();
+  }
+
+  function updateQuestion(idx, field, value) {
+    editorQs[idx][field] = value;
+    if (field === 'type' && (value === 'radio' || value === 'checkbox')) {
+      if (!editorQs[idx].options) editorQs[idx].options = ['Option 1', 'Option 2'];
+    }
+    if (field === 'type') renderQuestions();
+    document.getElementById('panelQCount').textContent = editorQs.length;
+  }
+
+  function addOption(qi) {
+    if (!editorQs[qi].options) editorQs[qi].options = [];
+    editorQs[qi].options.push(`Option ${editorQs[qi].options.length + 1}`);
+    renderQuestions();
+  }
+
+  function updateOption(qi, oi, val) { editorQs[qi].options[oi] = val; }
+
+  function removeOption(qi, oi) {
+    editorQs[qi].options.splice(oi, 1);
+    renderQuestions();
+  }
+
+  async function saveDefinition() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Saving…';
+    try {
+      const res = await fetch(`${API}/v1/surveys/${currentSrvId}/definition`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userId: currentUser.userId, definition: { questions: editorQs } }),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      showToast('Questions saved');
+    } catch {
+      showToast('Failed to save questions', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save`;
+    }
+  }
+
+  function copyEditorLink() {
+    if (currentSrvId) copyToClipboard(`https://10xquery.com/survey.html?id=${currentSrvId}`);
+  }
+
+  /* ─────────────────────────────────────────────────
+     RESULTS
+  ───────────────────────────────────────────────── */
+  async function viewResults() {
+    const survey = allSurveys.find(s => s.surveyId === currentSrvId);
+    document.getElementById('resultsTitle').textContent = survey?.title || 'Results';
+    document.getElementById('resultsCount').textContent = 'Loading…';
+    setPage('results');
+
+    const thead = document.getElementById('results-thead');
+    const tbody = document.getElementById('results-tbody');
+    tbody.innerHTML = `<tr><td colspan="100" style="text-align:center;padding:48px;color:var(--t2);">Loading…</td></tr>`;
+
+    try {
+      const [defRes, rspRes] = await Promise.all([
+        fetch(`${API}/v1/surveys/${currentSrvId}/definition?userId=${currentUser.userId}`),
+        fetch(`${API}/v1/surveys/${currentSrvId}/responses?userId=${currentUser.userId}`),
+      ]);
+      const defData   = await defRes.json();
+      const responses = await rspRes.json();
+      const questions = defData.questions || [];
+
+      document.getElementById('resultsCount').textContent =
+        `${responses.length} response${responses.length !== 1 ? 's' : ''}`;
+
+      thead.innerHTML = `
+        <th>Timestamp</th>
+        <th>Respondent ID</th>
+        ${questions.map(q => `<th>${esc(q.title)}</th>`).join('')}`;
+
+      if (!responses.length) {
+        tbody.innerHTML = `<tr><td colspan="${questions.length + 2}" style="text-align:center;padding:64px;color:var(--t2);">
+          No responses yet. Share the survey link to start collecting data.
+        </td></tr>`;
+        return;
       }
-      renderQuestions();
-    }
 
-    function addOption(qIdx) {
-      if (!editorQuestions[qIdx].options) editorQuestions[qIdx].options = [];
-      editorQuestions[qIdx].options.push(`Option ${editorQuestions[qIdx].options.length + 1}`);
-      renderQuestions();
-    }
-
-    function updateOption(qIdx, oIdx, value) {
-      editorQuestions[qIdx].options[oIdx] = value;
-    }
-
-    function removeOption(qIdx, oIdx) {
-      editorQuestions[qIdx].options.splice(oIdx, 1);
-      renderQuestions();
-    }
-
-    async function saveDefinition() {
-      const btn = document.getElementById('saveDefBtn');
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-      
-      try {
-        const res = await fetch(`${API}/v1/surveys/${currentSurveyId}/definition`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: currentUser.userId, definition: { questions: editorQuestions } })
-        });
-        if (!res.ok) throw new Error('Failed to save questions');
-        showToast('Questions saved successfully');
-      } catch (e) {
-        alert(e.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Save Questions';
-      }
-    }
-
-    // Results Logic
-    async function viewResults() {
-      switchView('results-view');
-      document.getElementById('results-tbody').innerHTML = '<tr><td colspan="100%" class="text-center py-8 text-textMuted">Loading results...</td></tr>';
-      
-      try {
-        // Fetch definition for column headers
-        const defRes = await fetch(`${API}/v1/surveys/${currentSurveyId}/definition?userId=${currentUser.userId}`);
-        const defData = await defRes.json();
-        const questions = defData.questions || [];
-        
-        // Fetch responses
-        const res = await fetch(`${API}/v1/surveys/${currentSurveyId}/responses?userId=${currentUser.userId}`);
-        const responses = await res.json();
-        
-        document.getElementById('resultsCount').textContent = `${responses.length} responses`;
-        
-        // Build table headers
-        let theadHtml = '<th class="p-4 font-semibold text-sm">Time</th><th class="p-4 font-semibold text-sm">Respondent ID</th>';
-        questions.forEach(q => {
-          theadHtml += `<th class="p-4 font-semibold text-sm whitespace-nowrap">${q.title}</th>`;
-        });
-        document.getElementById('results-thead').innerHTML = theadHtml;
-        
-        // Build table rows
-        if (!responses.length) {
-          document.getElementById('results-tbody').innerHTML = `<tr><td colspan="${questions.length + 2}" class="text-center py-12 text-textMuted">No responses yet.</td></tr>`;
-          return;
-        }
-
-        const tbodyHtml = responses.map(r => {
-          const d = new Date(r.ts);
-          const timeStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          
-          let rowHtml = `<td class="p-4 text-sm text-textMuted whitespace-nowrap">${timeStr}</td>`;
-          rowHtml += `<td class="p-4 text-sm font-mono text-primary">${r.responderId || 'Anonymous'}</td>`;
-          
-          questions.forEach(q => {
-            const ans = r.answers[q.id];
-            let ansDisplay = '-';
-            
-            if (ans !== undefined && ans !== null) {
-              if (Array.isArray(ans)) {
-                ansDisplay = ans.join(', ');
-              } else {
-                ansDisplay = String(ans);
-              }
-            }
-            rowHtml += `<td class="p-4 text-sm truncate max-w-[200px]" title="${ansDisplay}">${ansDisplay}</td>`;
-          });
-          
-          return `<tr class="hover:bg-black/20 transition-colors">${rowHtml}</tr>`;
+      tbody.innerHTML = responses.map(r => {
+        const d    = new Date(r.ts);
+        const time = d.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})
+                   + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+        const cells = questions.map(q => {
+          const ans = r.answers?.[q.id];
+          const txt = ans === undefined || ans === null ? '—'
+            : Array.isArray(ans) ? ans.join(', ') : String(ans);
+          return `<td title="${esc(txt)}">${esc(txt)}</td>`;
         }).join('');
-        
-        document.getElementById('results-tbody').innerHTML = tbodyHtml;
-        
-      } catch (e) {
-        document.getElementById('results-tbody').innerHTML = '<tr><td colspan="100%" class="text-red-500 text-center py-8">Failed to load results.</td></tr>';
-      }
+        return `<tr>
+          <td style="color:var(--t2);white-space:nowrap;">${time}</td>
+          <td style="font-family:monospace;color:var(--blue);">${esc(r.responderId || 'Anonymous')}</td>
+          ${cells}
+        </tr>`;
+      }).join('');
+    } catch {
+      tbody.innerHTML = `<tr><td colspan="100" style="text-align:center;padding:40px;color:var(--red);">Failed to load results.</td></tr>`;
     }
+  }
 
-    function closeResults() {
-      switchView('editor-view');
-    }
-
-    async function handleCreateSurvey(e) {
-      e.preventDefault();
-      const btn = document.getElementById('createBtn');
-      btn.disabled = true;
-      btn.textContent = 'Creating...';
-
-      const title = document.getElementById('surveyTitle').value;
-      const description = document.getElementById('surveyDesc').value;
-      const visibility = document.querySelector('input[name="visibility"]:checked').value;
-      
-      let allowedUsers = [];
-      if (visibility === 'private') {
-        const usersStr = document.getElementById('allowedUsers').value;
-        allowedUsers = usersStr.split(',').map(id => id.trim()).filter(id => id);
-      }
-
-      try {
-        const res = await fetch(`${API}/v1/surveys`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, description, userId: currentUser.userId, visibility, allowedUsers })
-        });
-        
-        if (!res.ok) throw new Error('Failed to create survey');
-        
-        closeModal();
-        showToast('Survey created successfully');
-        loadSurveys();
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Create Survey';
-      }
-    }
-  </script>
+  function closeResults() { setPage('editor'); }
+</script>
 </body>
 </html>

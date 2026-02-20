@@ -1,247 +1,570 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Take Survey - 10xQuery</title>
+  <title>Survey — 10xQuery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            background: '#0a0a0a',
-            surface: '#111111',
-            border: '#222222',
-            textMain: '#ededed',
-            textMuted: '#a1a1aa',
-            primary: '#0070f3',
-            primaryHover: '#0051a8'
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #0a0a0a; color: #ededed; -webkit-font-smoothing: antialiased; }
-    
-    .glass-panel {
-      background: rgba(17, 17, 17, 0.7);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid #222222;
-      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    /* ─────────────────────────────────────────────────
+       RESET & TOKENS
+    ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #060A14;
+      --surface-1:  #0C1526;
+      --surface-2:  #111D34;
+      --surface-3:  #17253E;
+      --bd:         rgba(148,163,184,.07);
+      --bd-2:       rgba(148,163,184,.12);
+      --bd-3:       rgba(148,163,184,.20);
+      --blue:       #3B82F6;
+      --blue-dark:  #2563EB;
+      --blue-dim:   rgba(59,130,246,.10);
+      --blue-glow:  rgba(59,130,246,.18);
+      --violet:     #8B5CF6;
+      --green:      #10B981;
+      --green-dim:  rgba(16,185,129,.10);
+      --red:        #EF4444;
+      --red-dim:    rgba(239,68,68,.10);
+      --t1:  #F0F6FF;
+      --t2:  #94A3B8;
+      --t3:  #475569;
+      --t4:  #2D3F57;
+      --r:   8px;
+      --r-lg: 12px;
+      --r-xl: 16px;
+      --ease: cubic-bezier(.4,0,.2,1);
+      --t-fast: 120ms;
+      --t-mid:  200ms;
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.55);
     }
-    
-    .input-field {
-      width: 100%; background: #000; border: 1px solid #333; color: #fff;
-      padding: 12px 16px; border-radius: 8px; outline: none; transition: all 0.2s ease;
-      font-size: 14px;
+
+    html { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--t1); -webkit-font-smoothing: antialiased; }
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    button, input, textarea, select { font-family: inherit; cursor: pointer; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+    /* ─────────────────────────────────────────────────
+       ANIMATIONS
+    ───────────────────────────────────────────────── */
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse  { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+
+    .fade-in { animation: fadeUp .25s var(--ease) forwards; }
+
+    /* ─────────────────────────────────────────────────
+       NAV
+    ───────────────────────────────────────────────── */
+    .nav {
+      height: 56px; flex-shrink: 0;
+      border-bottom: 1px solid var(--bd);
+      background: rgba(6,10,20,.85);
+      backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      position: sticky; top: 0; z-index: 10;
     }
-    .input-field:focus { border-color: #0070f3; box-shadow: 0 0 0 1px #0070f3; }
+    .nav-brand {
+      display: flex; align-items: center; gap: 9px;
+      text-decoration: none;
+    }
+    .nav-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-name { font-size: 14.5px; font-weight: 700; letter-spacing: -.3px; color: var(--t1); }
+    .nav-right { font-size: 12px; color: var(--t3); }
+
+    /* ─────────────────────────────────────────────────
+       LAYOUT
+    ───────────────────────────────────────────────── */
+    .main {
+      flex: 1; display: flex; align-items: flex-start; justify-content: center;
+      padding: 40px 20px 80px;
+    }
+    .content { width: 100%; max-width: 600px; }
+
+    /* ─────────────────────────────────────────────────
+       LOADING STATE
+    ───────────────────────────────────────────────── */
+    #view-loading {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 80px 0; gap: 16px;
+      color: var(--t2); font-size: 13.5px;
+    }
+    .loader {
+      width: 32px; height: 32px;
+      border: 2.5px solid var(--bd-2);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    /* ─────────────────────────────────────────────────
+       FORM CONTROLS
+    ───────────────────────────────────────────────── */
+    .field-label {
+      display: block; font-size: 12.5px; font-weight: 500;
+      color: var(--t2); margin-bottom: 6px; letter-spacing: .01em;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 10px 13px;
+      border-radius: var(--r); font-size: 13.5px;
+      outline: none; resize: vertical;
+      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+    }
+    .field-input::placeholder { color: var(--t3); }
+    .field-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
+
+    /* Radio / Checkbox question options */
+    .choice-group { display: flex; flex-direction: column; gap: 8px; }
+    .choice-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--bd); border-radius: var(--r);
+      cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .choice-item:hover { border-color: var(--bd-2); background: var(--surface-3); }
+    .choice-item:has(input:checked) {
+      border-color: rgba(59,130,246,.35);
+      background: var(--blue-dim);
+    }
+    .choice-item input[type="radio"],
+    .choice-item input[type="checkbox"] {
+      width: 15px; height: 15px; flex-shrink: 0;
+      accent-color: var(--blue); cursor: pointer;
+    }
+    .choice-item-label { font-size: 13.5px; color: var(--t1); cursor: pointer; }
+
+    /* ─────────────────────────────────────────────────
+       BUTTONS
+    ───────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 7px; padding: 10px 20px;
+      border-radius: var(--r); font-size: 13.5px; font-weight: 500;
+      border: 1px solid transparent;
+      transition: all var(--t-fast) var(--ease); white-space: nowrap;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed !important; transform: none !important; }
     
     .btn-primary {
-      background: #ededed; color: #0a0a0a; border: none; padding: 12px 24px;
-      border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--blue); color: #fff; border-color: var(--blue);
     }
-    .btn-primary:hover { background: #fff; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    
-    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--blue-dark); border-color: var(--blue-dark);
+      box-shadow: 0 4px 16px var(--blue-glow); transform: translateY(-1px);
+    }
+    .btn-primary:active:not(:disabled) { transform: none; box-shadow: none; }
+
+    .btn-ghost {
+      background: transparent; color: var(--t2); border-color: var(--bd-2);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface-2); color: var(--t1); border-color: var(--bd-3); }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.25); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+
+    /* ─────────────────────────────────────────────────
+       SURVEY CARD
+    ───────────────────────────────────────────────── */
+    .survey-card {
+      background: var(--surface-1);
+      border: 1px solid var(--bd-2);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .survey-header {
+      padding: 28px 32px 24px;
+      border-bottom: 1px solid var(--bd);
+      background: linear-gradient(to bottom, var(--surface-2), var(--surface-1));
+    }
+    .survey-title {
+      font-size: 22px; font-weight: 700; letter-spacing: -.45px;
+      color: var(--t1); margin-bottom: 8px; line-height: 1.3;
+    }
+    .survey-desc {
+      font-size: 13.5px; color: var(--t2); line-height: 1.65;
+    }
+
+    .survey-body { padding: 28px 32px; }
+
+    /* Question block */
+    .q-block { margin-bottom: 28px; }
+    .q-block:last-child { margin-bottom: 0; }
+    .q-number-label {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .q-num-badge {
+      width: 22px; height: 22px; flex-shrink: 0;
+      background: var(--blue-dim); border: 1px solid rgba(59,130,246,.2);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: var(--blue);
+    }
+    .q-title {
+      font-size: 14.5px; font-weight: 500; color: var(--t1); line-height: 1.4;
+    }
+    .q-required { color: var(--red); margin-left: 2px; }
+
+    /* divider between questions */
+    .q-divider {
+      height: 1px; background: var(--bd);
+      margin: 24px 0;
+    }
+
+    .survey-footer {
+      padding: 20px 32px 28px;
+      border-top: 1px solid var(--bd);
+      display: flex; align-items: center; justify-content: flex-end;
+    }
+
+    /* ─────────────────────────────────────────────────
+       AUTH GATE
+    ───────────────────────────────────────────────── */
+    #view-auth {
+      width: 100%; max-width: 420px; margin: 0 auto;
+    }
+    .auth-gate-card {
+      background: var(--surface-1);
+      border: 1px solid var(--bd-2);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .auth-gate-header {
+      padding: 28px 32px 22px;
+      border-bottom: 1px solid var(--bd);
+      text-align: center;
+    }
+    .lock-icon {
+      width: 44px; height: 44px; margin: 0 auto 14px;
+      background: var(--red-dim);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: #F87171;
+    }
+    .auth-gate-title {
+      font-size: 17px; font-weight: 700; letter-spacing: -.3px; margin-bottom: 6px;
+    }
+    .auth-gate-sub { font-size: 13px; color: var(--t2); line-height: 1.55; }
+    .auth-gate-body { padding: 24px 32px 28px; }
+    .access-id-input {
+      width: 100%; text-align: center;
+      font-size: 22px; font-weight: 600; letter-spacing: .25em; font-family: monospace;
+      background: var(--bg); border: 1px solid var(--bd-2);
+      color: var(--t1); padding: 14px;
+      border-radius: var(--r); outline: none;
+      transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+      margin-bottom: 8px;
+    }
+    .access-id-input::placeholder { color: var(--t3); letter-spacing: .1em; font-size: 18px; }
+    .access-id-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-glow); }
+    .access-id-hint { font-size: 12px; color: var(--t3); text-align: center; margin-bottom: 20px; }
+    .auth-error-msg {
+      padding: 10px 13px; margin-bottom: 16px;
+      background: var(--red-dim); border: 1px solid rgba(239,68,68,.2);
+      border-radius: var(--r); font-size: 12.5px; color: #F87171;
+      display: none;
+    }
+
+    /* ─────────────────────────────────────────────────
+       SUCCESS STATE
+    ───────────────────────────────────────────────── */
+    #view-success {
+      text-align: center; padding: 60px 0;
+    }
+    .success-icon {
+      width: 56px; height: 56px; margin: 0 auto 20px;
+      background: var(--green-dim);
+      border: 1px solid rgba(16,185,129,.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #34D399;
+    }
+    .success-title { font-size: 22px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 10px; }
+    .success-desc { font-size: 14px; color: var(--t2); line-height: 1.6; max-width: 340px; margin: 0 auto 28px; }
+
+    /* ─────────────────────────────────────────────────
+       ERROR STATE
+    ───────────────────────────────────────────────── */
+    #view-error {
+      text-align: center; padding: 60px 0;
+    }
+    .error-icon {
+      width: 56px; height: 56px; margin: 0 auto 20px;
+      background: var(--red-dim);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #F87171;
+    }
+    .error-title { font-size: 22px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 10px; }
+    .error-desc { font-size: 14px; color: var(--t2); line-height: 1.6; max-width: 340px; margin: 0 auto 28px; }
+
+    @media (max-width: 640px) {
+      .survey-header, .survey-body, .survey-footer,
+      .auth-gate-body, .auth-gate-header { padding-left: 20px; padding-right: 20px; }
+      .main { padding: 20px 14px 60px; }
     }
   </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
 
-  <nav class="border-b border-border bg-surface h-16 flex items-center px-8 justify-center shrink-0">
-    <a href="/" class="font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">10xQuery</a>
+  <!-- Nav -->
+  <nav class="nav">
+    <a href="/" class="nav-brand">
+      <div class="nav-icon">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <span class="nav-name">10xQuery</span>
+    </a>
+    <span class="nav-right">Powered by 10xQuery Enterprise</span>
   </nav>
 
-  <main class="flex-1 w-full max-w-2xl mx-auto p-4 md:p-8 flex flex-col items-center justify-center">
-    
-    <div id="loading" class="text-center text-textMuted flex flex-col items-center gap-4">
-      <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <span>Loading survey...</span>
+  <main class="main">
+    <div class="content">
+
+      <!-- Loading -->
+      <div id="view-loading">
+        <div class="loader"></div>
+        <span>Loading survey…</span>
     </div>
 
-    <!-- Auth View for Private Surveys -->
-    <div id="auth-view" class="w-full max-w-md hidden fade-in">
-      <div class="glass-panel p-8 rounded-2xl">
-        <div class="mb-6 flex items-center gap-3 text-red-400 bg-red-950/20 p-4 border border-red-900/30 rounded-lg">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <span class="text-sm font-medium">This survey is private.</span>
+      <!-- Auth gate (private surveys) -->
+      <div id="view-auth" style="display:none;">
+        <div class="auth-gate-card fade-in">
+          <div class="auth-gate-header">
+            <div class="lock-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
         </div>
-        <form onsubmit="event.preventDefault(); handleAuth(event);">
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-textMuted mb-2">Access ID</label>
-            <input type="text" id="viewerId" class="input-field text-center tracking-widest font-mono text-lg" placeholder="12345678" required autocomplete="off" maxlength="8">
-            <p class="text-xs text-textMuted mt-2 text-center">Enter your 8-digit User ID to unlock.</p>
+            <h2 class="auth-gate-title">Private Survey</h2>
+            <p class="auth-gate-sub">This survey is restricted. Enter your 8-digit<br>User ID to gain access.</p>
           </div>
-          <button type="submit" id="authBtn" class="btn-primary w-full">Unlock Survey</button>
+          <div class="auth-gate-body">
+            <form onsubmit="event.preventDefault(); handleAuth(event);">
+              <div id="auth-error" class="auth-error-msg"></div>
+              <input
+                type="text"
+                id="viewerId"
+                class="access-id-input"
+                placeholder="00000000"
+                required
+                maxlength="8"
+                autocomplete="off"
+                pattern="[0-9]{8}"
+                inputmode="numeric"
+              >
+              <p class="access-id-hint">Your 8-digit ID can be found in your 10xQuery dashboard.</p>
+              <button type="submit" id="authBtn" class="btn btn-primary" style="width:100%;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  <line x1="12" y1="15" x2="12" y2="17"/>
+                </svg>
+                <span id="authBtnText">Unlock Survey</span>
+              </button>
         </form>
       </div>
     </div>
-
-    <!-- Survey Content View -->
-    <div id="survey-view" class="w-full hidden fade-in">
-      <div class="glass-panel p-8 md:p-10 rounded-2xl">
-        <div class="mb-8 pb-8 border-b border-border">
-          <h1 id="title" class="text-3xl font-bold tracking-tight mb-3"></h1>
-          <p id="desc" class="text-textMuted text-lg leading-relaxed"></p>
         </div>
         
-        <form onsubmit="event.preventDefault(); handleSubmit(event);" id="survey-form">
-          <div class="mb-8">
-            <label class="block text-base font-medium text-textMain mb-4">Your response</label>
-            <textarea id="answer" class="input-field resize-y min-h-[160px] p-4 text-base leading-relaxed" placeholder="Type your answer here..." required></textarea>
+      <!-- Survey form -->
+      <div id="view-survey" style="display:none;">
+        <div class="survey-card fade-in">
+          <div class="survey-header">
+            <h1 class="survey-title" id="survey-title"></h1>
+            <p class="survey-desc" id="survey-desc"></p>
           </div>
-          <div class="flex justify-end">
-            <button type="submit" id="submitBtn" class="btn-primary">
+          <div class="survey-body">
+            <form id="survey-form" onsubmit="event.preventDefault(); handleSubmit(event);">
+              <div id="questions-container"></div>
+              <div class="survey-footer" style="padding:0;margin-top:20px;">
+                <button type="submit" id="submitBtn" class="btn btn-primary">
               Submit Response
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
             </button>
           </div>
         </form>
+          </div>
       </div>
     </div>
 
-    <!-- Success View -->
-    <div id="success-view" class="w-full hidden fade-in text-center">
-      <div class="glass-panel p-12 rounded-2xl flex flex-col items-center justify-center">
-        <div class="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mb-6">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <!-- Success -->
+      <div id="view-success" style="display:none;" class="fade-in">
+        <div class="success-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
         </div>
-        <h2 class="text-2xl font-bold tracking-tight mb-2">Response recorded</h2>
-        <p class="text-textMuted">Thank you for taking the time to share your thoughts.</p>
-      </div>
+        <h2 class="success-title">Response Submitted</h2>
+        <p class="success-desc">Thank you for participating. Your response has been securely recorded.</p>
+        <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
     </div>
 
-    <!-- Error View -->
-    <div id="error-view" class="w-full hidden fade-in text-center">
-      <div class="glass-panel p-12 rounded-2xl flex flex-col items-center justify-center border-red-900/30">
-        <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <!-- Error -->
+      <div id="view-error" style="display:none;" class="fade-in">
+        <div class="error-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
         </div>
-        <h2 id="error-title" class="text-2xl font-bold tracking-tight mb-2">Survey Not Found</h2>
-        <p id="error-desc" class="text-textMuted">The link might be broken or you do not have permission.</p>
+        <h2 class="error-title" id="error-title">Survey Not Found</h2>
+        <p class="error-desc" id="error-desc">The link may be broken, expired, or you may not have access.</p>
+        <a href="/" class="btn btn-ghost">← Back to 10xQuery</a>
       </div>
-    </div>
 
+    </div>
   </main>
 
   <script>
-    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'http://localhost:8000' : 'https://api.10xquery.com';
-    const params = new URLSearchParams(window.location.search);
-    const surveyId = params.get('id');
+    const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'http://localhost:8000'
+      : 'https://api.10xquery.com';
+
+    const params    = new URLSearchParams(location.search);
+    const surveyId  = params.get('id');
     let currentUserId = null;
-
-    function showView(viewId) {
-      ['loading', 'auth-view', 'survey-view', 'success-view', 'error-view'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      document.getElementById(viewId).classList.remove('hidden');
-    }
-
     let surveyQuestions = [];
 
-    async function load(userId = null) {
-      if (!surveyId) {
-        showView('error-view');
-        return;
-      }
-      
-      let url = `${API}/v1/surveys/${surveyId}`;
-      if (userId) url += `?userId=${userId}`;
-      
+    /* ── View management ── */
+    function showView(id) {
+      ['loading','auth','survey','success','error'].forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (el) el.style.display = 'none';
+      });
+      const target = document.getElementById('view-' + id);
+      if (target) target.style.display = '';
+    }
+
+    /* ── Load survey ── */
+    async function loadSurvey(userId = null) {
+      if (!surveyId) { showView('error'); return; }
+
+      showView('loading');
+
       try {
+        const url = `${API}/v1/surveys/${surveyId}${userId ? `?userId=${userId}` : ''}`;
         const res = await fetch(url);
         
         if (res.status === 403) {
-          showView('auth-view');
+          showView('auth');
           if (userId) {
-            alert("Access denied. That ID is not allowed to view this survey.");
+            const errEl = document.getElementById('auth-error');
+            errEl.textContent = 'Access denied. That ID is not authorised for this survey.';
+            errEl.style.display = 'block';
             document.getElementById('viewerId').value = '';
           }
           return;
         }
         
-        if (res.ok) {
+        if (!res.ok) {
+          showView('error');
+          return;
+        }
+
           const data = await res.json();
           currentUserId = userId;
-          document.getElementById('title').textContent = data.title;
           
-          const descEl = document.getElementById('desc');
+        document.getElementById('survey-title').textContent = data.title || 'Untitled Survey';
+        const descEl = document.getElementById('survey-desc');
           if (data.description) {
             descEl.textContent = data.description;
-            descEl.classList.remove('hidden');
+          descEl.style.display = '';
           } else {
-            descEl.classList.add('hidden');
+          descEl.style.display = 'none';
           }
 
-          // Fetch questions
-          const defRes = await fetch(`${API}/v1/surveys/${surveyId}/definition${userId ? `?userId=${userId}` : ''}`);
+        // Fetch question definition
+        const defUrl = `${API}/v1/surveys/${surveyId}/definition${userId ? `?userId=${userId}` : ''}`;
+        const defRes = await fetch(defUrl);
           if (defRes.ok) {
             const defData = await defRes.json();
             surveyQuestions = defData.questions || [];
-            if (!surveyQuestions.length) surveyQuestions = [{ id: 'q1', type: 'longtext', title: 'Your thoughts:' }];
-            renderQuestions();
+          if (!surveyQuestions.length) {
+            surveyQuestions = [{ id: 'q1', type: 'longtext', title: 'Your response' }];
           }
-
-          showView('survey-view');
-        } else {
-          showView('error-view');
         }
+
+        renderQuestions();
+        showView('survey');
+
+        // Update page title
+        document.title = `${data.title} — 10xQuery`;
+
       } catch (err) {
-        document.getElementById('error-title').textContent = "Connection Error";
-        document.getElementById('error-desc').textContent = "Failed to connect to the server.";
-        showView('error-view');
+        document.getElementById('error-title').textContent = 'Connection Error';
+        document.getElementById('error-desc').textContent  = 'Unable to reach the server. Please check your connection.';
+        showView('error');
       }
     }
 
+    /* ── Render questions ── */
     function renderQuestions() {
-      const form = document.getElementById('survey-form');
-      
+      const container = document.getElementById('questions-container');
       let html = '';
+
       surveyQuestions.forEach((q, idx) => {
-        html += `<div class="mb-8" id="q-container-${q.id}">
-          <label class="block text-base font-medium text-textMain mb-4">
-            <span class="text-textMuted font-mono mr-2">${idx + 1}.</span>${q.title}
-          </label>`;
+        if (idx > 0) html += '<div class="q-divider"></div>';
+
+        html += `<div class="q-block">
+          <div class="q-number-label">
+            <div class="q-num-badge">${idx + 1}</div>
+            <span class="q-title">${esc(q.title)}<span class="q-required">*</span></span>
+          </div>`;
 
         if (q.type === 'text') {
-          html += `<input type="text" id="ans-${q.id}" class="input-field p-4 text-base" required>`;
+          html += `<input type="text" id="ans-${q.id}" class="field-input" placeholder="Your answer…" required>`;
+
         } else if (q.type === 'longtext') {
-          html += `<textarea id="ans-${q.id}" class="input-field resize-y min-h-[120px] p-4 text-base leading-relaxed" required></textarea>`;
+          html += `<textarea id="ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…" required></textarea>`;
+
         } else if (q.type === 'radio') {
-          html += `<div class="space-y-3">`;
-          (q.options || []).forEach((opt, oIdx) => {
+          html += `<div class="choice-group">`;
+          (q.options || []).forEach(opt => {
+            const safeOpt = esc(opt);
             html += `
-              <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="radio" name="ans-${q.id}" value="${opt}" class="w-5 h-5 text-primary bg-black border-border focus:ring-primary focus:ring-2" required>
-                <span class="text-textMain group-hover:text-white transition-colors">${opt}</span>
+              <label class="choice-item">
+                <input type="radio" name="ans-${q.id}" value="${safeOpt}" required>
+                <span class="choice-item-label">${safeOpt}</span>
               </label>`;
           });
           html += `</div>`;
+
         } else if (q.type === 'checkbox') {
-          html += `<div class="space-y-3">`;
-          (q.options || []).forEach((opt, oIdx) => {
+          html += `<div class="choice-group">`;
+          (q.options || []).forEach(opt => {
+            const safeOpt = esc(opt);
             html += `
-              <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" name="ans-${q.id}" value="${opt}" class="w-5 h-5 text-primary bg-black border-border rounded focus:ring-primary focus:ring-2">
-                <span class="text-textMain group-hover:text-white transition-colors">${opt}</span>
+              <label class="choice-item">
+                <input type="checkbox" name="ans-${q.id}" value="${safeOpt}">
+                <span class="choice-item-label">${safeOpt}</span>
               </label>`;
           });
           html += `</div>`;
@@ -250,45 +573,47 @@
         html += `</div>`;
       });
 
-      html += `
-        <div class="flex justify-end pt-4 border-t border-border">
-          <button type="submit" id="submitBtn" class="btn-primary">
-            Submit Response
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-          </button>
-        </div>
-      `;
-      
-      form.innerHTML = html;
+      container.innerHTML = html;
     }
 
-    function handleAuth(e) {
-      e.preventDefault();
-      const id = document.getElementById('viewerId').value.trim();
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str ?? '';
+      return d.innerHTML;
+    }
+
+    /* ── Auth gate handler ── */
+    async function handleAuth(e) {
+      const id   = document.getElementById('viewerId').value.trim();
       if (!id) return;
       
-      const btn = document.getElementById('authBtn');
+      const btn  = document.getElementById('authBtn');
+      const text = document.getElementById('authBtnText');
       btn.disabled = true;
-      btn.textContent = 'Verifying...';
-      
-      loadSurvey(id).finally(() => {
+      text.textContent = 'Verifying…';
+
+      const errEl = document.getElementById('auth-error');
+      errEl.style.display = 'none';
+
+      await loadSurvey(id);
+
         btn.disabled = false;
-        btn.textContent = 'Unlock Survey';
-      });
+      text.textContent = 'Unlock Survey';
     }
 
+    /* ── Submit handler ── */
     async function handleSubmit(e) {
-      e.preventDefault();
-      
       const answers = {};
       
-      // Collect answers
       for (const q of surveyQuestions) {
         if (q.type === 'text' || q.type === 'longtext') {
-          answers[q.id] = document.getElementById(`ans-${q.id}`).value.trim();
+          const el = document.getElementById(`ans-${q.id}`);
+          if (el) answers[q.id] = el.value.trim();
+
         } else if (q.type === 'radio') {
           const checked = document.querySelector(`input[name="ans-${q.id}"]:checked`);
           if (checked) answers[q.id] = checked.value;
+
         } else if (q.type === 'checkbox') {
           const checked = document.querySelectorAll(`input[name="ans-${q.id}"]:checked`);
           answers[q.id] = Array.from(checked).map(el => el.value);
@@ -297,31 +622,32 @@
       
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
-      btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...`;
+      btn.innerHTML = '<div class="spinner"></div> Submitting…';
       
       try {
-        const payload = { answers: answers };
+        const payload = { answers };
         if (currentUserId) payload.responderId = currentUserId;
         
         const res = await fetch(`${API}/v1/surveys/${surveyId}/responses`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
-        
-        if (res.ok) {
-          showView('success-view');
-        } else {
-          throw new Error("Failed to submit response");
-        }
+
+        if (!res.ok) throw new Error('Server rejected the submission');
+        showView('success');
+
       } catch (err) {
-        alert("Error: " + err.message);
         btn.disabled = false;
-        btn.innerHTML = `Submit Response <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+        btn.innerHTML = `Submit Response
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>`;
+        alert('Submission failed: ' + err.message);
       }
     }
 
-    // Initialize
+    // Boot
     loadSurvey();
   </script>
 </body>
