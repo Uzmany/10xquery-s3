@@ -1244,7 +1244,21 @@
 <!-- ════════════════════════════════════════════════
      AUTH PAGE
 ════════════════════════════════════════════════ -->
-<div id="auth-page">
+<!-- Full-screen loading veil shown while we attempt silent re-auth -->
+<div id="init-veil" style="
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+">
+  <div style="
+    width:28px;height:28px;border-radius:50%;
+    border:2.5px solid var(--bd-2);border-top-color:var(--blue);
+    animation:spin .7s linear infinite;
+  "></div>
+  <span style="font-size:13px;color:var(--t2);">Loading…</span>
+    </div>
+
+<div id="auth-page" style="display:none;">
 
   <!-- Left branding panel (desktop) -->
   <div class="auth-panel-left">
@@ -1257,7 +1271,7 @@
     </div>
         <span class="brand-name">10xQuery</span>
       </div>
-
+      
       <h2 class="auth-headline">
         The enterprise survey<br>platform built for <span>scale.</span>
       </h2>
@@ -2197,7 +2211,13 @@
     }
   }
 
+  function _dismissVeil() {
+    const veil = document.getElementById('init-veil');
+    if (veil) veil.style.display = 'none';
+  }
+
   function mountApp() {
+    _dismissVeil();
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app').classList.add('visible');
 
@@ -2212,7 +2232,9 @@
   }
 
     function logout() {
-    currentUser = null; allSurveys = [];
+    // Tell the server to clear the refresh-token cookie
+    fetch(`${API}/v1/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    currentUser = null; allSurveys = []; window._accessToken = '';
     document.getElementById('app').classList.remove('visible');
     document.getElementById('auth-page').style.display = '';
     document.getElementById('email').value    = '';
@@ -3168,7 +3190,7 @@
     if (el) el.classList.add('active');
   }
 
-  function closeResults() {
+    function closeResults() {
     document.getElementById('exportCsvBtn').style.display  = 'none';
     document.getElementById('exportXlsxBtn').style.display = 'none';
     // Reset any matrix rendering
@@ -3399,6 +3421,39 @@
     XLSX.writeFile(wb, `${title} - Results.xlsx`);
     showToast('Excel file downloaded');
   }
+
+  /* ─────────────────────────────────────────────────
+     AUTO-LOGIN ON PAGE LOAD
+     Uses the httpOnly refresh-token cookie the server
+     set at login time. No credentials stored in JS/localStorage.
+  ───────────────────────────────────────────────── */
+  (async function initSession() {
+    try {
+      // Attempt silent token refresh
+      const refreshRes = await fetch(`${API}/v1/auth/refresh`, {
+          method: 'POST',
+        credentials: 'include',
+      });
+      if (!refreshRes.ok) throw new Error('no_session');
+
+      const { accessToken } = await refreshRes.json();
+      window._accessToken = accessToken;
+
+      // Fetch the user profile with the fresh token
+      const meRes = await fetch(`${API}/v1/users/me`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+        credentials: 'include',
+      });
+      if (!meRes.ok) throw new Error('no_profile');
+
+      currentUser = await meRes.json();
+      mountApp();  // hides veil + shows app
+    } catch {
+      // No valid session — show the login page
+      _dismissVeil();
+      document.getElementById('auth-page').style.display = '';
+    }
+  })();
 
   function _triggerDownload(blob, filename) {
     const url = URL.createObjectURL(blob);
