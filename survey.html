@@ -237,6 +237,20 @@
       display: flex; align-items: center; justify-content: flex-end;
     }
 
+    /* ── Multi-entry (slots) layout ── */
+    .multi-slot-group {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .multi-slot-item {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .multi-slot-num {
+      width: 20px; padding-top: 10px;
+      font-size: 11.5px; font-weight: 700; color: var(--blue);
+      text-align: right; flex-shrink: 0; line-height: 1;
+    }
+    .multi-slot-item .field-input { flex: 1; }
+
     /* ─────────────────────────────────────────────────
        AUTH GATE
     ───────────────────────────────────────────────── */
@@ -540,10 +554,34 @@
           </div>`;
 
         if (q.type === 'text') {
-          html += `<input type="text" id="ans-${q.id}" class="field-input" placeholder="Your answer…" required>`;
+          const slots = q.slots || 1;
+          if (slots > 1) {
+            html += `<div class="multi-slot-group">`;
+            for (let i = 0; i < slots; i++) {
+              html += `<div class="multi-slot-item">
+                <span class="multi-slot-num">${i + 1}</span>
+                <input type="text" id="ans-${q.id}-${i}" class="field-input" placeholder="Entry ${i + 1}…">
+              </div>`;
+            }
+            html += `</div>`;
+          } else {
+            html += `<input type="text" id="ans-${q.id}" class="field-input" placeholder="Your answer…" required>`;
+          }
 
         } else if (q.type === 'longtext') {
-          html += `<textarea id="ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…" required></textarea>`;
+          const slots = q.slots || 1;
+          if (slots > 1) {
+            html += `<div class="multi-slot-group">`;
+            for (let i = 0; i < slots; i++) {
+              html += `<div class="multi-slot-item">
+                <span class="multi-slot-num">${i + 1}</span>
+                <textarea id="ans-${q.id}-${i}" class="field-input" rows="2" placeholder="Entry ${i + 1}…"></textarea>
+              </div>`;
+            }
+            html += `</div>`;
+          } else {
+            html += `<textarea id="ans-${q.id}" class="field-input" rows="4" placeholder="Your detailed answer…" required></textarea>`;
+          }
 
         } else if (q.type === 'radio') {
           html += `<div class="choice-group">`;
@@ -607,8 +645,17 @@
       
       for (const q of surveyQuestions) {
         if (q.type === 'text' || q.type === 'longtext') {
-          const el = document.getElementById(`ans-${q.id}`);
-          if (el) answers[q.id] = el.value.trim();
+          const slots = q.slots || 1;
+          if (slots > 1) {
+            // Collect all slot values as an ordered array
+            answers[q.id] = Array.from({length: slots}, (_, i) => {
+              const el = document.getElementById(`ans-${q.id}-${i}`);
+              return el ? el.value.trim() : '';
+            });
+          } else {
+            const el = document.getElementById(`ans-${q.id}`);
+            if (el) answers[q.id] = el.value.trim();
+          }
 
         } else if (q.type === 'radio') {
           const checked = document.querySelector(`input[name="ans-${q.id}"]:checked`);
