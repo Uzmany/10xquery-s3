@@ -1565,6 +1565,26 @@
         </div>
           <p style="font-size:13px;color:var(--t2);" id="resultsCount">Loading...</p>
         </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;align-self:flex-start;margin-top:4px;">
+          <button class="btn btn-ghost" id="exportCsvBtn" onclick="exportCSV()" style="display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export CSV
+          </button>
+          <button class="btn btn-ghost" id="exportXlsxBtn" onclick="exportXLSX()" style="display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Export Excel
+          </button>
+        </div>
         </div>
         
       <div class="results-wrap">
@@ -2214,7 +2234,7 @@
   /* ─────────────────────────────────────────────────
      RESULTS
   ───────────────────────────────────────────────── */
-  async function viewResults() {
+    async function viewResults() {
     const survey = allSurveys.find(s => s.surveyId === currentSrvId);
     document.getElementById('resultsTitle').textContent = survey?.title || 'Results';
     document.getElementById('resultsCount').textContent = 'Loading…';
@@ -2238,13 +2258,18 @@
       document.getElementById('resultsCount').textContent =
         `${currentResponses.length} response${currentResponses.length !== 1 ? 's' : ''}${isMatrix ? ' · matrix mode' : ''}`;
 
+      // Show export buttons once data is loaded
+      const hasDat = currentResponses.length > 0;
+      document.getElementById('exportCsvBtn').style.display  = hasDat ? '' : 'none';
+      document.getElementById('exportXlsxBtn').style.display = hasDat ? '' : 'none';
+
       if (!currentResponses.length) {
         thead.innerHTML = '';
         tbody.innerHTML = `<tr><td style="text-align:center;padding:64px;color:var(--t2);display:block;">
           No responses yet. Share the survey link to start collecting data.
         </td></tr>`;
-        return;
-      }
+          return;
+        }
 
       if (isMatrix) {
         // ── Matrix results: one sub-table per response ──
@@ -2330,6 +2355,8 @@
   }
 
   function closeResults() {
+    document.getElementById('exportCsvBtn').style.display  = 'none';
+    document.getElementById('exportXlsxBtn').style.display = 'none';
     // Reset any matrix rendering
     const wrap = document.querySelector('.results-wrap');
     if (wrap) {
@@ -2351,7 +2378,7 @@
     const questions = currentDefinition.questions || [];
     const rowLabels = currentDefinition.rowLabels || [];
     const rowKeys   = r.rowKeys?.length ? r.rowKeys : rowLabels;
-    const d = new Date(r.ts);
+          const d = new Date(r.ts);
     document.getElementById('editRespMeta').textContent =
       `${d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})} · ${r.responderId||'Anonymous'}`;
     document.getElementById('editRespContent').innerHTML =
@@ -2415,7 +2442,7 @@
               <span style="font-size:11px;color:var(--blue);width:16px;text-align:right;flex-shrink:0;">${i+1}</span>
               <input type="text" id="ea-${q.id}-${i}" class="field-input" style="flex:1;" value="${esc(vals[i]||'')}">
             </div>`).join('');
-        } else {
+              } else {
           input = `<input type="text" id="ea-${q.id}" class="field-input" value="${esc(Array.isArray(val)?val.join(', '):val||'')}">`;
         }
       } else if (q.type === 'longtext') {
@@ -2435,12 +2462,145 @@
         <div style="font-size:12.5px;font-weight:500;color:var(--t2);margin-bottom:6px;">${esc(q.title)}</div>
         ${input}
       </div>`;
-    }).join('');
+        }).join('');
+  }
+
+  /* ─────────────────────────────────────────────────
+     EXPORT
+  ───────────────────────────────────────────────── */
+
+  // Build the flat 2-D array of data rows used by both exporters
+  function _buildExportRows() {
+    if (!currentDefinition || !currentResponses.length) return { headers: [], rows: [] };
+    const questions = currentDefinition.questions || [];
+    const rowLabels = currentDefinition.rowLabels || [];
+    const isMatrix  = rowLabels.length > 0;
+    const survey    = allSurveys.find(s => s.surveyId === currentSrvId);
+    const title     = survey?.title || 'Results';
+
+    const fmtDate = ts => {
+      const d = new Date(ts);
+      return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+           + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    };
+
+    const fmtVal = val => {
+      if (val === undefined || val === null) return '';
+      if (Array.isArray(val)) return val.join('; ');
+      if (typeof val === 'object') return JSON.stringify(val);
+      return String(val);
+    };
+
+    let headers, rows;
+
+    if (isMatrix) {
+      headers = ['Timestamp', 'Respondent', 'Row', ...questions.map(q => q.title)];
+      rows = [];
+      currentResponses.forEach(r => {
+        const keys = r.rowKeys?.length ? r.rowKeys : rowLabels;
+        keys.forEach(key => {
+          rows.push([
+            fmtDate(r.ts),
+            r.responderId || 'Anonymous',
+            key,
+            ...questions.map(q => fmtVal(r.answers?.[q.id]?.[key]))
+          ]);
+        });
+      });
+    } else {
+      headers = ['Timestamp', 'Respondent', ...questions.map(q => q.title)];
+      rows = currentResponses.map(r => [
+        fmtDate(r.ts),
+        r.responderId || 'Anonymous',
+        ...questions.map(q => fmtVal(r.answers?.[q.id]))
+      ]);
+    }
+
+    return { headers, rows, title };
+  }
+
+  function exportCSV() {
+    const { headers, rows, title } = _buildExportRows();
+    if (!headers.length) return;
+
+    const escapeCell = val => {
+      const s = String(val ?? '');
+      // Wrap in quotes if the cell contains commas, newlines, or double-quotes
+      return (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r'))
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(escapeCell).join(','))
+      .join('\r\n');
+
+    // UTF-8 BOM so Excel opens it correctly without encoding issues
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    _triggerDownload(blob, `${title} - Results.csv`);
+  }
+
+  function exportXLSX() {
+    const { headers, rows, title } = _buildExportRows();
+    if (!headers.length) return;
+
+    // Load SheetJS from CDN on demand, then export
+    if (window.XLSX) {
+      _doXLSXExport(headers, rows, title);
+      return;
+    }
+    const btn = document.getElementById('exportXlsxBtn');
+      btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="border-color:rgba(0,0,0,.2);border-top-color:var(--blue);"></div> Loading…';
+    const script = document.createElement('script');
+    script.src = 'https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js';
+    script.onload = () => {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export Excel`;
+      _doXLSXExport(headers, rows, title);
+    };
+    script.onerror = () => {
+      btn.disabled = false;
+      btn.innerHTML = 'Export Excel';
+      showToast('Could not load Excel library — try CSV instead', 'err');
+    };
+    document.head.appendChild(script);
+  }
+
+  function _doXLSXExport(headers, rows, title) {
+    const XLSX = window.XLSX;
+    const wsData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Auto-size columns: max 50 chars wide
+    const colWidths = headers.map((h, ci) => {
+      const maxLen = Math.max(h.length, ...rows.map(r => String(r[ci] ?? '').length));
+      return { wch: Math.min(maxLen + 2, 50) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Style header row bold (requires xlsx-style or manual approach — skip for simplicity)
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    XLSX.writeFile(wb, `${title} - Results.xlsx`);
+    showToast('Excel file downloaded');
+  }
+
+  function _triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href    = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`"${filename}" downloaded`);
   }
 
   async function saveEditedResponse() {
     const btn = document.getElementById('saveRespBtn');
-    btn.disabled = true;
+      btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div> Saving…';
     const r         = currentResponses.find(x => x.responseId === editingResponseId);
     const questions = currentDefinition.questions || [];
@@ -2481,12 +2641,12 @@
           ).map(el => el.value);
         }
       }
-    }
+      }
 
-    try {
+      try {
       const res = await fetch(`${API}/v1/surveys/${currentSrvId}/responses/${editingResponseId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ userId: currentUser.userId, answers, rowKeys }),
       });
@@ -2496,11 +2656,11 @@
       viewResults(); // refresh
     } catch {
       showToast('Failed to save response', 'err');
-    } finally {
-      btn.disabled = false;
+      } finally {
+        btn.disabled = false;
       btn.textContent = 'Save Changes';
+      }
     }
-  }
   </script>
 </body>
 </html>
